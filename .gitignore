@@ -14,3 +14,10 @@ desktop.ini
 # Editores
 .vscode/
 .idea/
+
+# Archivos temporales
+*.tmp 
+*.temp
+*.log
+*.bak
+*~
