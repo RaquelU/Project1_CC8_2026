@@ -1,0 +1,90 @@
+[gd_scene format=3 uid="uid://5bens3g2iscd"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_upt1h"]
+albedo_color = Color(0.37871593, 0.21920899, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_v83me"]
+size = Vector3(100, 0.2, 100)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5jx1q"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_v83me"]
+size = Vector3(100, 0.2, 100)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_v83me"]
+top_radius = 30.0
+bottom_radius = 30.0
+height = 0.05
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cny0d"]
+albedo_color = Color(0.21265206, 0.5086046, 0, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_cny0d"]
+top_radius = 0.15
+bottom_radius = 0.15
+height = 4.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1kjrt"]
+albedo_color = Color(0.79308766, 0.33665422, 1.92523e-07, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_cny0d"]
+size = Vector3(1.8, 1, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uy18h"]
+albedo_color = Color(0.9071944, 0, 0.14910522, 1)
+
+[sub_resource type="Environment" id="Environment_v83me"]
+background_mode = 1
+background_color = Color(0.7564177, 0.8712855, 0.9947774, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.47263163, 0.7077685, 1, 1)
+ambient_light_energy = 0.5
+
+[node name="GameWorld" type="Node3D" unique_id=1433746728]
+
+[node name="LevelGeometry" type="Node3D" parent="." unique_id=304494420]
+
+[node name="Ground" type="StaticBody3D" parent="LevelGeometry" unique_id=666828145]
+
+[node name="GroundMesh" type="MeshInstance3D" parent="LevelGeometry/Ground" unique_id=22805419]
+material_override = SubResource("StandardMaterial3D_upt1h")
+mesh = SubResource("BoxMesh_v83me")
+surface_material_override/0 = SubResource("StandardMaterial3D_5jx1q")
+
+[node name="GroundCollision" type="CollisionShape3D" parent="LevelGeometry/Ground" unique_id=2145409878]
+shape = SubResource("BoxShape3D_v83me")
+
+[node name="GameplayArea" type="Node3D" parent="." unique_id=590425304]
+
+[node name="CentralCircle" type="MeshInstance3D" parent="GameplayArea" unique_id=1554683890]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, 0)
+mesh = SubResource("CylinderMesh_v83me")
+surface_material_override/0 = SubResource("StandardMaterial3D_cny0d")
+
+[node name="Flag" type="Node3D" parent="GameplayArea" unique_id=1181589584]
+
+[node name="FlagPole" type="MeshInstance3D" parent="GameplayArea/Flag" unique_id=1329527169]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+mesh = SubResource("CylinderMesh_cny0d")
+surface_material_override/0 = SubResource("StandardMaterial3D_1kjrt")
+
+[node name="FlagCloth" type="MeshInstance3D" parent="GameplayArea/Flag" unique_id=839326088]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9, 3.2, 0)
+mesh = SubResource("BoxMesh_cny0d")
+surface_material_override/0 = SubResource("StandardMaterial3D_uy18h")
+
+[node name="SpawnPoints" type="Node3D" parent="." unique_id=1716609325]
+
+[node name="Lightning" type="Node3D" parent="." unique_id=1773578057]
+
+[node name="Sun" type="DirectionalLight3D" parent="Lightning" unique_id=1789126805]
+transform = Transform3D(0.8660254, 0.38302222, -0.32139382, 0, 0.64278764, 0.76604444, 0.5, -0.66341394, 0.5566704, 0, 15.152109, 0)
+
+[node name="Environment" type="Node3D" parent="." unique_id=1428873659]
+
+[node name="World" type="WorldEnvironment" parent="Environment" unique_id=1598730121]
+environment = SubResource("Environment_v83me")
+
+[node name="DebugCamera" type="Camera3D" parent="." unique_id=493416773]
+transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 55, 55)
+current = true
