@@ -52,3 +52,32 @@ No hubo cambios de idea. Desde el inicio se decidió trabajar en Godot 3D con GD
 ### Próxima versión
 
 Crear el jugador provisional, implementar movimiento local y probar la colisión con el suelo.
+
+## Versión 3 - Jugador y reglas locales
+
+**Estado:** Completada  
+**Commit:** pendiente
+
+- Se creó una escena `Player` con `CharacterBody3D`.
+- Se implementó movimiento, gravedad y colisión con el suelo.
+- Se configuró una cámara en primera persona.
+- Se limitaron las posiciones del jugador al área del mapa.
+- Se agregó interacción local con la bandera mediante la tecla `E`.
+- Se agregó validación local de victoria al salir completamente del círculo con la bandera.
+- Se guardó una captura de la prueba funcional en `tests/evidence/`.
+
+### Cambios de idea
+
+No hubo cambios de idea. Desde el inicio se tenia la idea clara de utilizar el jugador en primera persona para mayor inmersion
+
+### Consideración para la red
+
+La captura y la victoria funcionan localmente para comprobar las reglas. Cuando se implemente la red, estas validaciones serán realizadas por el servidor.
+
+### Uso de inteligencia artificial
+
+Se utilizó ChatGPT como apoyo para generar una base del script `scripts/player/player.gd`.
+
+El prompt utilizado y las modificaciones realizadas se encuentran documentados en:
+
+`docs/prompts_ia.md`

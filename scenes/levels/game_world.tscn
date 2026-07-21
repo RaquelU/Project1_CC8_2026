@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://5bens3g2iscd"]
 
+[ext_resource type="PackedScene" uid="uid://dyesdiqe4ttra" path="res://scenes/player/player.tscn" id="1_upt1h"]
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_upt1h"]
 albedo_color = Color(0.37871593, 0.21920899, 0, 1)
 
@@ -61,7 +63,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, 0)
 mesh = SubResource("CylinderMesh_v83me")
 surface_material_override/0 = SubResource("StandardMaterial3D_cny0d")
 
-[node name="Flag" type="Node3D" parent="GameplayArea" unique_id=1181589584]
+[node name="Flag" type="Node3D" parent="GameplayArea" unique_id=1181589584 groups=["flag"]]
 
 [node name="FlagPole" type="MeshInstance3D" parent="GameplayArea/Flag" unique_id=1329527169]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
@@ -87,4 +89,6 @@ environment = SubResource("Environment_v83me")
 
 [node name="DebugCamera" type="Camera3D" parent="." unique_id=493416773]
 transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 55, 55)
-current = true
+
+[node name="Player" parent="." unique_id=1369076834 instance=ExtResource("1_upt1h")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 40)
