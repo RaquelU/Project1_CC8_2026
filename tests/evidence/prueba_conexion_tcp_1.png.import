@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://qcgqhfvywu1v"
-path="res://.godot/imported/prototipo_funcional_v0.2.0.png-19853210314bb506d56c3655c96caefc.ctex"
+uid="uid://b71ctj1gfvc87"
+path="res://.godot/imported/prueba_conexion_tcp_1.png-36b4274e158ff53011944b3991d40c10.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://tests/evidence/prototipo_funcional_v0.2.0.png"
-dest_files=["res://.godot/imported/prototipo_funcional_v0.2.0.png-19853210314bb506d56c3655c96caefc.ctex"]
+source_file="res://tests/evidence/prueba_conexion_tcp_1.png"
+dest_files=["res://.godot/imported/prueba_conexion_tcp_1.png-36b4274e158ff53011944b3991d40c10.ctex"]
 
 [params]
 

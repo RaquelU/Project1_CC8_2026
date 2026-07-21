@@ -10,7 +10,7 @@ height = 4.0
 radius = 1.5
 height = 4.0
 
-[node name="Player" type="CharacterBody3D" unique_id=1369076834]
+[node name="Player" type="CharacterBody3D" unique_id=1369076834 groups=["local_player"]]
 script = ExtResource("1_8afob")
 
 [node name="PlayerMesh" type="MeshInstance3D" parent="." unique_id=763669119]

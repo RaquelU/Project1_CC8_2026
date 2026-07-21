@@ -1,6 +1,6 @@
 # Registro de prompts utilizados con inteligencia artificial (ChatGPT, GPT-5.6 Sol, Nivel de Inteligencia Media)
 
-## Versión 3 — Jugador y funcionamiento local
+## Versión 3 — Jugador y reglas locales
 
 ### Archivo relacionado
 
@@ -24,3 +24,47 @@ Durante las pruebas se realizaron los siguientes ajustes:
 - Se comprobó la condición local de victoria.
 
 La validación de captura y victoria es provisional. En la implementación multijugador, estas reglas deberán ser confirmadas por el servidor, pero por el momento la implementación dada por la IA funciona y ayuda a comprender las bases para modificar posteriormente a la hora de pulir el proyecto.
+
+## Versión 4 — Primera implementación de red TCP
+
+### Archivos relacionados
+
+- `scenes/network/server.tscn`
+- `scripts/network/game_server.gd`
+- `scripts/network/game_client.gd`
+- `scripts/player/player.gd`
+- `scenes/game_world.tscn`
+
+### Prompt utilizado
+
+lo que quiero implementar en este momento luego de que me dieras el codigo para player.gd y asi hacer pruebas de que godot esta funcionando perfectamente de manera local con las reglas establecidas que te indiqué, quiero ahora un codigo que implemente de la manera más óptima, sin tantas líneas de código pero lo más funcional posible (de manera que pueda ser entendible y de esta manera entienda lo que está pasando) para poder implementar el siguiente paso fundamental de este proyecto en Godot, entonces quiero que implementes lo requerido con el protocolo en desarrollo que tenemos con nuestros compañeros en conjunto, los cuales son esos dos PDF adjuntos, debes seguir al pie de la letra lo recomendado en esos archivos e implementarlo, de esta manera yo podré probar y ver qué cambios necesita y como mejorarlo. Tambien, dame una idea de cómo probarlo a pesar de no tener a nadie de manera local que pueda probarlo junto conmigo.
+
+### Uso y modificaciones realizadas
+
+El código generado se utilizó como base para comenzar la implementación de la comunicación entre cliente y servidor mediante TCP.
+
+Durante las pruebas se realizaron los siguientes ajustes:
+
+- Se creó la escena `server.tscn` para ejecutar el servidor de manera independiente.
+- Se creó y conectó el script `game_server.gd`.
+- Se agregó el nodo `NetworkClient` dentro de `game_world.tscn`.
+- Se creó y conectó el script `game_client.gd`.
+- Se configuró una conexión local mediante la dirección `127.0.0.1`.
+- Se utilizó el puerto TCP `8889` para las pruebas.
+- Se implementó el envío de mensajes en formato JSON.
+- Se agregó el salto de línea `\n` como separador entre mensajes TCP.
+- Se implementaron buffers para procesar mensajes completos, incompletos o recibidos juntos.
+- Se implementó el mensaje `join` para registrar al jugador.
+- Se verificó la recepción de los mensajes `welcome`, `lobby`, `countdown` y `start`.
+- Se implementó el envío de la dirección de movimiento desde el cliente.
+- Se modificó `player.gd` para que el jugador enviara su intención de movimiento en lugar de calcular directamente su posición.
+- Se comprobó que el servidor calculara la posición oficial del jugador.
+- Se mantuvo la conversión entre las coordenadas lógicas del protocolo y la escala 3D utilizada en Godot.
+- Se comprobó que el jugador únicamente pudiera moverse después del mensaje `start`.
+- Se verificó que la cámara en primera persona continuara funcionando.
+- Se ejecutó el servidor desde PowerShell utilizando la versión de consola de Godot.
+- Se realizó una prueba funcional con un servidor y un cliente en la misma computadora.
+
+La implementación desarrollada en esta etapa corresponde a una primera prueba funcional de red mediante TCP. El servidor ya mantiene la autoridad sobre el movimiento y las reglas principales, mientras que el cliente envía sus acciones y muestra el estado recibido.
+
+Por el momento, la prueba se realizó con un solo cliente conectado al servidor. La representación visual de otros jugadores, el descubrimiento mediante UDP y la conexión de varios clientes se dejaron pendientes para la siguiente etapa.
