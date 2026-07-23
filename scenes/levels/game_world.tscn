@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://dyesdiqe4ttra" path="res://scenes/player/player.tscn" id="1_upt1h"]
 [ext_resource type="Script" uid="uid://bvyfbb24nv0qp" path="res://scripts/network/game_client.gd" id="2_w0s2s"]
+[ext_resource type="Script" uid="uid://dlyef2bpjka8o" path="res://scripts/network/server_discovery.gd" id="3_4r7d4"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_upt1h"]
 albedo_color = Color(0.37871593, 0.21920899, 0, 1)
@@ -96,3 +97,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 40)
 
 [node name="NetworkClient" type="Node3D" parent="." unique_id=216851154]
 script = ExtResource("2_w0s2s")
+
+[node name="ServerDiscovery" type="Node3D" parent="." unique_id=1023970230]
+script = ExtResource("3_4r7d4")

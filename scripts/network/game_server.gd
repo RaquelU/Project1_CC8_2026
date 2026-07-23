@@ -4,6 +4,12 @@ const PORT := 8889
 const PROTOCOL_VERSION := 1
 const MAX_PLAYERS := 100
 
+# Nuevas constantes para la nueva implementacion
+const DISCOVERY_PORT := 8888
+const SERVER_NAME := "Servidor CTF Godot"
+const MIN_PLAYERS_TO_START := 2
+# Fin de constantes
+
 const MAP_SIZE := 1000.0
 const PLAYER_RADIUS := 15.0
 const CIRCLE_RADIUS := 300.0
@@ -18,6 +24,9 @@ const CENTER := Vector2(500.0, 500.0)
 const VICTORY_RADIUS := CIRCLE_RADIUS + PLAYER_RADIUS
 
 var tcp_server := TCPServer.new()
+# Parte de descubrimiento de servidores por UDP
+var udp_server := UDPServer.new()
+# Fin de creacion UDP
 var clients: Dictionary = {}
 var players: Dictionary = {}
 
@@ -34,20 +43,33 @@ var flag := {
 
 var random := RandomNumberGenerator.new()
 
+# Nueva implementacion para ready
+# Menciona que Godot llama regularmente a UDPServer.poll() para procesar los paquetes nuevos
 
 func _ready() -> void:
 	random.randomize()
 
-	var result := tcp_server.listen(PORT)
+	var tcp_result := tcp_server.listen(PORT)
 
-	if result != OK:
+	if tcp_result != OK:
 		push_error("No se pudo iniciar el servidor TCP.")
 		return
 
-	print("Servidor iniciado en el puerto ", PORT)
+	udp_server.max_pending_connections = 100
+
+	var udp_result := udp_server.listen(DISCOVERY_PORT)
+
+	if udp_result != OK:
+		push_error("No se pudo iniciar el descubrimiento UDP.")
+		return
+
+	print("Servidor TCP iniciado en el puerto ", PORT)
+	print("Descubrimiento UDP activo en el puerto ", DISCOVERY_PORT)
 
 
 func _process(delta: float) -> void:
+	# Nuevo: process_discovery()
+	process_discovery()
 	accept_new_clients()
 	read_client_messages()
 
@@ -204,7 +226,12 @@ func handle_join(player_id: String, message: Dictionary) -> void:
 
 	broadcast_lobby()
 
-	if phase == "lobby" and not countdown_active:
+	# if reemplazado por el anterior para aplicar mejores condiciones
+	if (
+		phase == "lobby"
+		and not countdown_active
+		and players.size() >= MIN_PLAYERS_TO_START
+	):
 		start_countdown()
 		
 func create_spawn_position() -> Vector2:
@@ -233,14 +260,17 @@ func broadcast_lobby() -> void:
 		"players": player_list
 	})
 	
+# Nueva implementacion de countdown
 func start_countdown() -> void:
 	countdown_active = true
 	phase = "countdown"
 
 	for seconds in range(COUNTDOWN_SECONDS, 0, -1):
-		if players.is_empty():
+		if players.size() < MIN_PLAYERS_TO_START:
 			phase = "lobby"
 			countdown_active = false
+			broadcast_lobby()
+			print("Countdown cancelado: faltan jugadores.")
 			return
 
 		broadcast({
@@ -257,7 +287,7 @@ func start_countdown() -> void:
 		"type": "start"
 	})
 
-	print("La partida comenzó.")
+	print("La partida comenzó con ", players.size(), " jugadores.")
 	
 func handle_input(player_id: String, message: Dictionary) -> void:
 	if not validate_player_action(player_id):
@@ -465,3 +495,49 @@ func reset_flag() -> void:
 	flag["owner"] = null
 	flag["x"] = CENTER.x
 	flag["y"] = CENTER.y
+	
+# Nueva funcion agregada hasta de ultimo
+# Menciona que en UDP no se agrega el salto de linea porque cada datagrama
+# Ya llega como un paquete completo. La delimitacion por salto de linea solo aplica en TCP
+
+func process_discovery() -> void:
+	udp_server.poll()
+
+	while udp_server.is_connection_available():
+		var peer := udp_server.take_connection()
+
+		if peer == null or peer.get_available_packet_count() == 0:
+			continue
+
+		var packet := peer.get_packet()
+		var text := packet.get_string_from_utf8()
+		var message = JSON.parse_string(text)
+
+		if typeof(message) != TYPE_DICTIONARY:
+			continue
+
+		if message.get("type") != "discover":
+			continue
+
+		if message.get("v") != PROTOCOL_VERSION:
+			continue
+
+		var response := {
+			"type": "server_info",
+			"v": PROTOCOL_VERSION,
+			"name": SERVER_NAME,
+			"tcp_port": PORT,
+			"state": phase,
+			"players": players.size()
+		}
+
+		peer.put_packet(
+			JSON.stringify(response).to_utf8_buffer()
+		)
+
+		print(
+			"Solicitud de descubrimiento respondida a ",
+			peer.get_packet_ip(),
+			":",
+			peer.get_packet_port()
+		)

@@ -45,6 +45,10 @@ No hubo cambios de idea.
 
 La escena se ejecutó correctamente y se visualizaron el suelo, la iluminación, la cámara, el círculo y la bandera. La colisión del suelo será probada al implementar el jugador.
 
+La evidencia de esta prueba se guardó en:
+
+`tests/evidence/greybox_v0.2.0.png`
+
 ### Cambios de idea
 
 No hubo cambios de idea. Desde el inicio se decidió trabajar en Godot 3D con GDScript y seguir el protocolo que está siendo definido por la clase.
@@ -76,6 +80,10 @@ No hubo cambios de idea. Desde el inicio se tenia la idea clara de utilizar el j
 
 La captura y la victoria funcionan localmente para comprobar las reglas. Cuando se implemente la red, estas validaciones serán realizadas por el servidor.
 
+El archivo relacionado a esta parte se encuentra en:
+
+`tests/evidence/prototipo_funcional_v0.3.0.png`
+
 ### Uso de inteligencia artificial
 
 Se utilizó ChatGPT como apoyo para generar una base del script `scripts/player/player.gd`.
@@ -83,6 +91,7 @@ Se utilizó ChatGPT como apoyo para generar una base del script `scripts/player/
 El prompt utilizado y las modificaciones realizadas se encuentran documentados en:
 
 `docs/prompts_ia.md`
+`docs/prompts_ia/prompt_player_script_1.png`
 
 ---
 
@@ -174,3 +183,62 @@ La lógica local anterior de movimiento, captura y victoria fue sustituida parci
 ### Próxima versión
 
 Probar dos clientes conectados al mismo servidor y crear una representación visual sencilla para los jugadores remotos.
+
+---
+
+## Versión 5 - Descubrimiento UDP y conexión de dos clientes
+
+**Estado:** Completada para prueba local con dos clientes  
+**Commit:** `feat: implementar descubrimiento UDP y conexión de dos clientes`
+
+### Cambios realizados
+
+- Se agregó descubrimiento automático de servidores mediante UDP.
+- Se configuró el puerto fijo `8888` para el descubrimiento.
+- Se implementaron los mensajes `discover` y `server_info`.
+- Se creó el script `scripts/network/server_discovery.gd`.
+- El cliente muestra en consola los servidores encontrados.
+- Se mantuvo la conexión manual por IP como respaldo.
+- Se configuró el inicio del countdown al conectarse dos jugadores.
+- Se probaron dos clientes simultáneos conectados al mismo servidor.
+- La comunicación de la partida continúa funcionando mediante TCP.
+
+### Prueba realizada
+
+La prueba se realizó en una sola computadora:
+
+1. Se ejecutó el servidor.
+2. El servidor inició TCP en el puerto `8889` y UDP en el puerto `8888`.
+3. El primer cliente encontró el servidor por broadcast UDP.
+4. Se abrió un segundo cliente desde otra instancia de Godot.
+5. Ambos clientes se conectaron al mismo servidor.
+6. Al conectarse el segundo jugador, inició el countdown.
+7. Ambos clientes recibieron el inicio de partida.
+
+La evidencia de esta prueba se guardó en:
+
+`tests/evidence/prueba_dos_conexiones.png`
+
+### Uso de inteligencia artificial
+
+Se utilizó ChatGPT como apoyo para implementar el descubrimiento UDP, la conexión automática al servidor encontrado y la prueba con dos clientes.
+
+El prompt utilizado y las modificaciones realizadas se encuentran documentados en:
+
+`docs/prompts_ia.md`
+`docs/prompts_ia/prompt_implementacion_two_players.png`
+
+### Resultado
+
+Se comprobó el descubrimiento automático mediante UDP y la conexión simultánea de dos clientes al mismo servidor.
+
+### Limitaciones actuales
+
+- Todavía no existe una interfaz gráfica para elegir servidor.
+- La selección del servidor se realiza mediante consola.
+- Los jugadores remotos todavía no se muestran visualmente dentro del escenario 3D.
+- La prueba se realizó con dos clientes, aunque el servidor conserva el límite de hasta 100 conexiones.
+
+### Próxima versión
+
+Crear la representación visual de los jugadores remotos y actualizar sus posiciones con los mensajes `state`.

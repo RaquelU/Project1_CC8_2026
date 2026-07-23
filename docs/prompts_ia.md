@@ -68,3 +68,37 @@ Durante las pruebas se realizaron los siguientes ajustes:
 La implementación desarrollada en esta etapa corresponde a una primera prueba funcional de red mediante TCP. El servidor ya mantiene la autoridad sobre el movimiento y las reglas principales, mientras que el cliente envía sus acciones y muestra el estado recibido.
 
 Por el momento, la prueba se realizó con un solo cliente conectado al servidor. La representación visual de otros jugadores, el descubrimiento mediante UDP y la conexión de varios clientes se dejaron pendientes para la siguiente etapa.
+---
+
+## Versión 5 — Descubrimiento UDP y conexión de dos clientes
+
+### Archivos relacionados
+
+- `scripts/network/game_server.gd`
+- `scripts/network/game_client.gd`
+- `scripts/network/server_discovery.gd`
+- `scenes/levels/game_world.tscn`
+
+### Prompt utilizado
+
+para la siguiente etapa que quiero implementar para mi proyecto, lo que necesito es poder hacer la parte de conexion completa, ya no solo utilizando tcp e ingresando de manera manual la direccion IP para conectarse, si no que ahora, implementando por completo las reglas aplicadas del protocolo diseñado por mis compañeros y yo, el cual te envie anteriormente. Necesito que siga al pie de la letra las reglas desarrolladas en ambos PDF. Lo que busco es poder tener una funcion bastante completa del funcionamiento esperado, sin implementar aun una interfaz (o UI) para el descubrimiento de servidor y demas, por el momento solo busco funcionamiento al 100%, por tanto puedo proponer que el servidor envie la informacion al cliente por medio de su terminal, y el cliente poder hacer un request de a qué servidor quiere conectarse. En otras palabras, debe cumplir con el protocolo dado en ambos PDF por medio de la terminal y no por una UI por el momento, esto con el fin de comprobar el funcionamiento de Godot y su lenguaje GDScript. Lo que quiero es que puedan haber mínimo 16 jugadores conectados (por el momento pueden ser 2 jugadores simultaneos y que comience el cooldown al conectarse) y que a la vez, los jugadores conectados puedan ver a los demas jugadores. Ese es mi objetivo en este momento. Ayudame
+
+### Uso y modificaciones realizadas
+
+El código generado se utilizó como base para ampliar la conexión cliente-servidor y agregar el descubrimiento automático de servidores.
+
+Durante las pruebas se realizaron los siguientes ajustes:
+
+- Se agregó un servidor UDP en el puerto `8888`.
+- Se implementó el mensaje `discover`.
+- Se implementó la respuesta `server_info`.
+- Se agregó el script `server_discovery.gd`.
+- El cliente puede encontrar servidores mediante broadcast UDP.
+- Se mantuvo la conexión manual por IP como respaldo.
+- Se configuró el inicio del countdown al conectarse dos jugadores.
+- Se probaron dos clientes conectados al mismo servidor desde una sola computadora.
+- Se comprobó que ambos clientes se conectaran y recibieran el inicio de partida.
+- Se mantuvo TCP para la comunicación de la partida.
+- La representación visual de los otros jugadores quedó pendiente para la siguiente etapa.
+
+La prueba confirmó el descubrimiento UDP y la conexión simultánea de dos clientes. Todavía falta crear la representación visual de los jugadores remotos dentro del escenario 3D.

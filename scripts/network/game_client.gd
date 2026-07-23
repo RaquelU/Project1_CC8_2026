@@ -6,6 +6,8 @@ const PROTOCOL_VERSION := 1
 @export var server_port := 8889
 @export var player_name := "Jugador local"
 
+@onready var server_discovery: Node = $"../ServerDiscovery"
+
 var peer := StreamPeerTCP.new()
 var buffer := ""
 
@@ -19,7 +21,6 @@ var local_player: Node3D
 var flag: Node3D
 var flag_original_parent: Node
 
-
 func _ready() -> void:
 	add_to_group("network_client")
 
@@ -29,13 +30,27 @@ func _ready() -> void:
 	if flag:
 		flag_original_parent = flag.get_parent()
 
-	connect_to_server()
+	if try_manual_connection_from_arguments():
+		return
+
+	server_discovery.server_selected.connect(
+		_on_server_selected
+	)
+
+	server_discovery.start_discovery()
 	
 func connect_to_server() -> void:
+	if peer.get_status() != StreamPeerTCP.STATUS_NONE:
+		peer.disconnect_from_host()
+
+	connected = false
+	join_sent = false
+	game_started = false
+
 	var result := peer.connect_to_host(server_ip, server_port)
 
 	if result != OK:
-		push_error("No se pudo iniciar la conexión.")
+		push_error("No se pudo iniciar la conexión TCP.")
 		return
 
 	print("Conectando con ", server_ip, ":", server_port)
@@ -200,3 +215,39 @@ func update_flag(flag_data: Dictionary) -> void:
 		0.1,
 		position.z
 	)
+
+# Nuevas funciones
+func _on_server_selected(ip: String, port: int) -> void:
+	server_ip = ip
+	server_port = port
+	connect_to_server()
+	
+func try_manual_connection_from_arguments() -> bool:
+	var manual_ip := ""
+	var manual_port := 0
+
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--ip="):
+			manual_ip = argument.get_slice("=", 1)
+
+		elif argument.begins_with("--port="):
+			manual_port = int(argument.get_slice("=", 1))
+
+	if manual_ip.is_empty():
+		return false
+
+	if manual_port <= 0:
+		manual_port = 8889
+
+	server_ip = manual_ip
+	server_port = manual_port
+
+	print(
+		"Conexión manual solicitada: ",
+		server_ip,
+		":",
+		server_port
+	)
+
+	connect_to_server()
+	return true
