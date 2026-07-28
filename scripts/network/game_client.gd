@@ -22,6 +22,8 @@ var local_player: Node3D
 var flag: Node3D
 var flag_original_parent: Node
 
+signal connection_completed
+
 
 func _ready() -> void:
 	add_to_group("network_client")
@@ -34,8 +36,7 @@ func _ready() -> void:
 
 	server_discovery.server_selected.connect(_on_server_selected)
 
-	if not try_manual_connection_from_arguments():
-		server_discovery.start_discovery()
+	try_manual_connection_from_arguments()
 
 
 func _process(_delta: float) -> void:
@@ -78,6 +79,10 @@ func connect_to_server() -> void:
 
 	print("Conectando con ", server_ip, ":", server_port)
 
+func connect_with_address(ip: String, port: int) -> void:
+	server_ip = ip
+	server_port = port
+	connect_to_server()
 
 func send_join() -> void:
 	join_sent = true
@@ -165,6 +170,7 @@ func handle_message(message: Dictionary) -> void:
 		"welcome":
 			local_player_id = str(message["player_id"])
 			print("ID asignado: ", local_player_id)
+			connection_completed.emit()
 			print("Configuración: ", message["config"])
 
 		"lobby":

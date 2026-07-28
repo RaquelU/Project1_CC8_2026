@@ -130,3 +130,35 @@ Los cambios principales fueron:
 - Se agregó descubrimiento por broadcast, descubrimiento UDP unicast y conexión TCP directa como respaldo.
 - Se mantuvo el manejo por terminal, sin interfaz gráfica.
 - Se realizó una prueba entre dos computadoras conectadas (una amiga utilizando el mismo proyecto desde su casa) mediante ZeroTier, comprobando descubrimiento UDP unicast y conexión TCP al puerto anunciado.
+
+## Versión 7 — Interfaz para descubrimiento y conexión a servidores
+
+### Archivos relacionados
+
+- `scenes/ui/server_browser.tscn`
+- `scripts/ui/server_browser.gd`
+- `scripts/network/game_client.gd`
+- `scripts/network/server_discovery.gd`
+- `scenes/levels/game_world.tscn`
+
+### Prompt utilizado
+
+perfecto, ahora si quiero pasar a la parte de: Crear una interfaz para mostrar servidores encontrados, seleccionar uno y realizar la conexión sin utilizar argumentos de terminal. Tambien, quiero saber si con lo que tengo ahorita solo con abrir mi servidor y si estan conectados a mi red vpn entonces pueden encontrar mi servidor sin especificar nada (que creo que es el ideal no?)
+
+### Uso y modificaciones realizadas
+
+El código generado se utilizó como base para reemplazar el manejo de conexión por terminal con una interfaz gráfica dentro del juego.
+
+Los cambios principales fueron:
+
+- Se creó una escena de interfaz para buscar y mostrar servidores disponibles.
+- Se agregó una lista visual para seleccionar el servidor deseado.
+- Se permitió ingresar el nombre del jugador antes de conectarse.
+- Se agregó búsqueda automática mediante UDP.
+- Se agregó búsqueda manual por dirección IP como respaldo.
+- Se mantuvo la conexión TCP directa mediante IP y puerto.
+- Se modificó el descubrimiento para entregar la lista de servidores a la interfaz en lugar de seleccionar uno automáticamente.
+- La interfaz se oculta después de recibir la confirmación de conexión del servidor.
+- Se comprobó el funcionamiento con dos clientes, countdown, partida completa y nueva ronda sin reconexión.
+
+La implementación permite iniciar el cliente sin argumentos adicionales en la terminal y realizar el proceso de búsqueda, selección y conexión desde la interfaz.

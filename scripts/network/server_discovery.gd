@@ -1,6 +1,7 @@
 extends Node
 
 signal server_selected(ip: String, port: int)
+signal discovery_finished(servers: Array[Dictionary])
 
 const DISCOVERY_PORT := 8888
 const PROTOCOL_VERSION := 1
@@ -217,10 +218,7 @@ func finish_discovery() -> void:
 
 	if discovered_servers.is_empty():
 		print("No se encontraron servidores.")
-		print(
-			"Respaldo UDP unicast: --ip=<IP_DEL_SERVIDOR>. ",
-			"Respaldo TCP directo: --ip=<IP_DEL_SERVIDOR> --port=<PUERTO_TCP>."
-		)
+		discovery_finished.emit([])
 		return
 
 	print("Servidores disponibles:")
@@ -241,7 +239,7 @@ func finish_discovery() -> void:
 			server["players"]
 		)
 
-	select_server()
+	discovery_finished.emit(discovered_servers.duplicate(true))
 
 
 func select_server() -> void:

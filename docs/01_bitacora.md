@@ -301,3 +301,59 @@ Se comprobó que el cliente y el servidor pueden comunicarse entre dos computado
 ### Próxima versión
 
 Crear una interfaz para mostrar servidores encontrados, seleccionar uno y realizar la conexión sin utilizar argumentos de terminal.
+
+## Versión 7 - Interfaz para descubrimiento y conexión a servidores
+
+**Estado:** Completada para prueba local con dos clientes  
+**Commit:** `feat: agregar interfaz para descubrir y seleccionar servidores`
+
+### Cambios realizados
+
+- Se creó la escena `scenes/ui/server_browser.tscn`.
+- Se creó el script `scripts/ui/server_browser.gd`.
+- Se integró la interfaz dentro de `game_world.tscn` mediante un `CanvasLayer`.
+- Se agregó un campo para ingresar el nombre del jugador.
+- Se agregó un botón para buscar servidores mediante UDP.
+- Los servidores encontrados se muestran en una lista seleccionable.
+- Se agregó conexión al servidor seleccionado sin utilizar argumentos de terminal.
+- Se agregó búsqueda por IP como respaldo para redes donde el broadcast no funcione.
+- Se mantuvo la opción de conexión TCP directa mediante IP y puerto.
+- Se modificó `server_discovery.gd` para entregar los resultados a la interfaz.
+- Se modificó `game_client.gd` para permitir que la interfaz inicie la conexión.
+- La interfaz se oculta después de recibir el mensaje `welcome`.
+
+### Prueba realizada
+
+La prueba se realizó en una computadora con el servidor y dos clientes:
+
+1. Se ejecutó el servidor desde la terminal.
+2. Se abrió el cliente sin argumentos de conexión.
+3. La interfaz buscó y mostró los servidores disponibles.
+4. Se seleccionó el servidor desde la lista.
+5. Se realizó la conexión mediante el botón correspondiente.
+6. Se abrió un segundo cliente y se repitió el proceso.
+7. Al conectarse el segundo jugador, inició el countdown.
+8. Se comprobó el movimiento, la captura, el robo, la victoria y el inicio de una nueva ronda.
+9. La interfaz permaneció oculta durante la partida.
+
+### Uso de inteligencia artificial
+
+Se utilizó ChatGPT como apoyo para diseñar la estructura de la interfaz ya que no es uno de mis fuertes y asi conectarla con los scripts existentes de descubrimiento y cliente.
+Hubieron un par de modificaciones leves pero se dejaron algunas funciones en caso de necesitarlas.
+
+El prompt utilizado y las modificaciones realizadas se encuentran documentados en:
+
+`docs/prompts_ia.md`
+`docs/prompts_ia/prompt_interfaz_ui.png`
+
+### Resultado
+
+Se comprobó que el usuario puede buscar, seleccionar y conectarse a un servidor desde una interfaz gráfica, sin escribir argumentos de conexión en la terminal.
+
+### Consideración sobre redes y VPN
+
+El descubrimiento automático depende de que el broadcast UDP llegue a los demás dispositivos de la red. Por esta razón, la interfaz conserva la búsqueda manual por IP como respaldo para VPN o redes con restricciones.
+
+### Próxima versión
+
+Agregar manejo visual de errores de conexión y volver a mostrar el buscador cuando el servidor se desconecte.

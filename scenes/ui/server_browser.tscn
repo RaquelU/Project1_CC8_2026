@@ -1,0 +1,85 @@
+[gd_scene format=3 uid="uid://b5e5g7pfopnkq"]
+
+[node name="ServerBrowser" type="Control" unique_id=752566293]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=213410205]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer" unique_id=960790903]
+custom_minimum_size = Vector2(520, 500)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer" unique_id=1962140653]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer" unique_id=2002991029]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=670467680]
+layout_mode = 2
+text = "Buscar servidor CTF"
+
+[node name="PlayerNameInput" type="LineEdit" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1340221873]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Nombre del jugador"
+
+[node name="SearchButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=380024253]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Buscar servidores"
+
+[node name="SearchStatusLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1525637717]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Presiona Buscar servidores"
+
+[node name="ServerList" type="ItemList" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1090963257]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(450, 140)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ConnectButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=2044583928]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Conectar"
+
+[node name="HSeparator" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1012040419]
+layout_mode = 2
+
+[node name="ManualTitleLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=297280551]
+layout_mode = 2
+text = "Conexión manual"
+
+[node name="ManualIpInput" type="LineEdit" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=623712171]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "IP del servidor"
+
+[node name="DiscoverIpButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=862583264]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Buscar por IP"
+
+[node name="ManualPortInput" type="LineEdit" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=535246488]
+unique_name_in_owner = true
+layout_mode = 2
+text = "8889"
+placeholder_text = "Puerto TCP"
+
+[node name="DirectConnectButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1712730496]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Conectar directamente"
