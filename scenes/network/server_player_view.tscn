@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://o5ba3uox5qmy"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_srv1"]
+radius = 1.5
+height = 4.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_srv1"]
+albedo_color = Color(0.9071944, 0.5647059, 0.0627451, 1)
+
+[node name="ServerPlayerView" type="Node3D" unique_id=859830343]
+
+[node name="PlayerMesh" type="MeshInstance3D" parent="." unique_id=918825416]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+mesh = SubResource("CapsuleMesh_srv1")
+surface_material_override/0 = SubResource("StandardMaterial3D_srv1")
+
+[node name="NameLabel" type="Label3D" parent="." unique_id=49570936]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.6, 0)
+billboard = 1
+no_depth_test = true
+text = "Jugador"
+font_size = 350
+outline_size = 50

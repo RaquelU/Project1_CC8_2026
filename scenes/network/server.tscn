@@ -2,5 +2,91 @@
 
 [ext_resource type="Script" uid="uid://icipmwgk87mf" path="res://scripts/network/game_server.gd" id="1_k0wwj"]
 
-[node name="Server" type="Node3D" unique_id=1927567678]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
+albedo_color = Color(0.37871593, 0.21920899, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(100, 0.2, 100)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_circle"]
+top_radius = 30.0
+bottom_radius = 30.0
+height = 0.05
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_circle"]
+albedo_color = Color(0.21265206, 0.5086046, 0, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_pole"]
+top_radius = 0.15
+bottom_radius = 0.15
+height = 4.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pole"]
+albedo_color = Color(0.79308766, 0.33665422, 1.92523e-07, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_cloth"]
+size = Vector3(1.8, 1, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cloth"]
+albedo_color = Color(0.9071944, 0, 0.14910522, 1)
+
+[sub_resource type="Environment" id="Environment_srv"]
+background_mode = 1
+background_color = Color(0.7564177, 0.8712855, 0.9947774, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.47263163, 0.7077685, 1, 1)
+ambient_light_energy = 0.5
+
+[node name="Server" type="Node3D" unique_id=830895982]
 script = ExtResource("1_k0wwj")
+
+[node name="LevelGeometry" type="Node3D" parent="." unique_id=475820919]
+
+[node name="Ground" type="MeshInstance3D" parent="LevelGeometry" unique_id=894113941]
+material_override = SubResource("StandardMaterial3D_ground")
+mesh = SubResource("BoxMesh_ground")
+
+[node name="GameplayArea" type="Node3D" parent="." unique_id=378008793]
+
+[node name="CentralCircle" type="MeshInstance3D" parent="GameplayArea" unique_id=210052463]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, 0)
+mesh = SubResource("CylinderMesh_circle")
+surface_material_override/0 = SubResource("StandardMaterial3D_circle")
+
+[node name="Flag" type="Node3D" parent="GameplayArea" unique_id=1615048143]
+
+[node name="FlagPole" type="MeshInstance3D" parent="GameplayArea/Flag" unique_id=830838216]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+mesh = SubResource("CylinderMesh_pole")
+surface_material_override/0 = SubResource("StandardMaterial3D_pole")
+
+[node name="FlagCloth" type="MeshInstance3D" parent="GameplayArea/Flag" unique_id=633695962]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9, 3.2, 0)
+mesh = SubResource("BoxMesh_cloth")
+surface_material_override/0 = SubResource("StandardMaterial3D_cloth")
+
+[node name="PlayersContainer" type="Node3D" parent="." unique_id=874019858]
+
+[node name="Lightning" type="Node3D" parent="." unique_id=944592886]
+
+[node name="Sun" type="DirectionalLight3D" parent="Lightning" unique_id=477071511]
+transform = Transform3D(0.8660254, 0.38302222, -0.32139382, 0, 0.64278764, 0.76604444, 0.5, -0.66341394, 0.5566704, 0, 15.152109, 0)
+
+[node name="Environment" type="Node3D" parent="." unique_id=2142142866]
+
+[node name="World" type="WorldEnvironment" parent="Environment" unique_id=270529312]
+environment = SubResource("Environment_srv")
+
+[node name="SpectatorCamera" type="Camera3D" parent="." unique_id=745885791]
+transform = Transform3D(1, 0, 0, 0, 0.590833, 0.8067938, 0, -0.8067938, 0.590833, 0, 43.871967, 53.310555)
+current = true
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=790232084]
+
+[node name="StatusLabel" type="Label" parent="UI" unique_id=1820108683]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 520.0
+offset_bottom = 140.0
+theme_override_font_sizes/font_size = 22
+text = "Iniciando servidor..."

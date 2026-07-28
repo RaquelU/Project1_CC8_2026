@@ -357,3 +357,59 @@ El descubrimiento automático depende de que el broadcast UDP llegue a los demá
 ### Próxima versión
 
 Agregar manejo visual de errores de conexión y volver a mostrar el buscador cuando el servidor se desconecte.
+
+## Versión 8 - Visualización multijugador completa y corrección del descubrimiento por VPN
+
+**Estado:** Completada
+**Commit:** `feat: agregar visualización de jugadores remotos, vista espectadora del servidor y corregir descubrimiento UDP por subred`
+
+### Cambios realizados
+
+- Se creó `scripts/player/remote_player.gd` y `scenes/player/remote_player.tscn` para representar visualmente a los demás jugadores conectados dentro de `game_world.tscn`, con interpolación suave de posición.
+- Se modificó `game_client.gd` para que, además de aplicar la posición del jugador local, cree, mueva y elimine las cápsulas de los jugadores remotos según aparecen o desaparecen del arreglo `players[]` recibido en cada mensaje `state`.
+- Se corrigió un error en la posición visual de la bandera portada: antes solo se reparentaba al jugador local, por lo que en cualquier jugador remoto la bandera se quedaba pegada al suelo, escondida en el centro de su modelo. Ahora se reparenta correctamente a cualquier portador (local o remoto), con un desplazamiento elevado para que sea claramente visible.
+- Se agregó una etiqueta `Label3D` con el nombre de cada jugador remoto, capturando los nombres desde el mensaje `lobby` (el único que incluye `id` y `name` juntos, ya que `state` solo transmite posición).
+- Se creó `scenes/network/server_player_view.tscn` y se extendió `game_server.gd` para que el servidor deje de ser una consola vacía y muestre visualmente el mapa, el círculo central, la bandera y a todos los jugadores conectados en tiempo real, leyendo directamente los diccionarios internos `players` y `flag` (sin pasar por red, al tratarse del mismo proceso). Se agregó una cámara cenital fija y un HUD simple con la fase de la partida, el puerto TCP y la cantidad de jugadores conectados.
+- Se corrigió el tamaño de las etiquetas de nombre: `fixed_size = true` en `Label3D` mantenía el texto con el mismo tamaño en pantalla sin importar la distancia de la cámara, por lo que en la vista alejada del servidor los nombres se veían enormes y tapaban las cápsulas. Se quitó esa propiedad para que el texto escale con la distancia, como cualquier otro objeto 3D de la escena.
+- Se corrigió el descubrimiento de servidores por UDP para redes VPN: antes, el broadcast dirigido a la subred (necesario para redes como ZeroTier) solo se enviaba si se indicaba manualmente `--broadcast=<ip>` por terminal. Se modificó `server_discovery.gd` para detectar automáticamente todas las direcciones IPv4 locales de la máquina (incluyendo adaptadores virtuales como el de ZeroTier) y calcular el broadcast de cada una, sin depender de un argumento manual. También se filtraron las direcciones `169.254.x.x` (link-local/APIPA de interfaces inactivas), que generaban intentos de envío fallidos sin ningún efecto real.
+
+### Cambios de idea
+
+Se evaluó agregar un campo opcional `"rot"` (no documentado en el catálogo del protocolo, pero permitido como campo ignorable según la sección 2.2 del estándar) para replicar en los demás clientes hacia dónde mira cada jugador. Se decidió no implementarlo: ningún otro proyecto de la clase lo contempla, y se priorizó mantener el protocolo exactamente como fue acordado en conjunto, sin extensiones unilaterales que ningún compañero pudiera aprovechar.
+
+### Prueba realizada
+
+Prueba entre dos computadoras mediante ZeroTier:
+
+1. Se detectó que el descubrimiento era asimétrico: la computadora de una compañera encontraba el servidor local, pero la propia no encontraba el de ella.
+2. Se determinó que la causa era la falta de broadcast automático de subred: el paquete `discover` solo salía hacia `255.255.255.255`, dirección que normalmente no cruza el adaptador virtual de la VPN.
+3. Tras implementar la detección automática de subredes, se ejecutó el cliente sin ningún argumento adicional y se comprobó el descubrimiento correcto de servidores en la red local, incluyendo múltiples adaptadores virtuales (VMware/VirtualBox) presentes en la misma máquina, lo que confirmó que el servidor respondía por cada interfaz alcanzable.
+4. Se observó en la consola que los intentos de envío hacia direcciones `169.254.x.x` desaparecieron tras filtrarlas, aunque no se guardó captura de este paso en particular
+ya que al hacer las pruebas cerre por accidente la PowerShell.
+
+La evidencia de que se filtraron las direcciones se encuentra en:
+
+`tests/evidence/descubrimiento_udp_prueba.png`
+
+### Uso de inteligencia artificial
+
+A partir de esta versión se utilizó **Claude Sonnet 5 (Nivel de Inteligencia Media)** como apoyo de desarrollo, en lugar de ChatGPT debido a unos errores técnicos
+que ya no me permitieron utilizarlo y decidí cambiar de motor para evitar versiones gratuitas.
+
+El prompt utilizado y las modificaciones realizadas se encuentran documentados en:
+
+`docs/prompts_ia.md`
+`docs/prompts_ia/prompt_mejoras_proyecto.png`
+
+### Resultado
+
+Todos los jugadores conectados son ahora visibles entre sí dentro del cliente (incluyendo quién porta la bandera), y el servidor deja de ser una consola ciega para mostrar visualmente el estado completo de la partida, cumpliendo con el requisito del enunciado de que el modo servidor solo debe mostrar el juego de todos los jugadores. El descubrimiento por UDP funciona automáticamente sobre redes VPN como ZeroTier, sin necesidad de argumentos manuales.
+
+### Limitaciones actuales
+
+- La orientación de los jugadores remotos no se replica: todos se muestran con una orientación fija, ya que el protocolo acordado por la clase no contempla ese campo.
+- El cálculo automático del broadcast de subred asume máscara `/24`; en redes con una máscara distinta seguiría siendo necesario el respaldo manual `--broadcast=<ip>`.
+
+### Próxima versión
+
+Completar la documentación final del proyecto (bitácora, prompts de IA y referencias al historial de Git) y validar la entrega completa contra el protocolo y el enunciado del proyecto.

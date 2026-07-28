@@ -2,6 +2,10 @@ extends Node
 
 const PROTOCOL_VERSION := 1
 const MESSAGE_MAX_SIZE := 64 * 1024
+const REMOTE_PLAYER_SCENE: PackedScene = preload("res://scenes/player/remote_player.tscn")
+
+const FLAG_CARRY_OFFSET := Vector3(0.0, 1.5, -1.8)
+const FLAG_GROUND_HEIGHT := 0.1
 
 @export var server_ip := "127.0.0.1"
 @export var server_port := 8889
@@ -21,6 +25,9 @@ var last_direction := Vector2(99.0, 99.0)
 var local_player: Node3D
 var flag: Node3D
 var flag_original_parent: Node
+
+var remote_players: Dictionary = {}
+var known_player_names: Dictionary = {}
 
 signal connection_completed
 
@@ -58,6 +65,7 @@ func _process(_delta: float) -> void:
 		connected = false
 		join_sent = false
 		game_started = false
+		clear_remote_players()
 		print("Servidor desconectado.")
 
 
@@ -176,6 +184,8 @@ func handle_message(message: Dictionary) -> void:
 		"lobby":
 			game_started = false
 			last_direction = Vector2(99.0, 99.0)
+			clear_remote_players()
+			update_known_player_names(message.get("players", []))
 			print("Jugadores en lobby: ", message.get("players", []).size())
 
 		"countdown":
@@ -199,19 +209,68 @@ func handle_message(message: Dictionary) -> void:
 
 
 func apply_state(message: Dictionary) -> void:
-	for player_data in message.get("players", []):
-		if (
-			str(player_data["id"]) == local_player_id
-			and local_player
-		):
-			local_player.set_network_position(
-				protocol_to_godot(
-					float(player_data["x"]),
-					float(player_data["y"])
-				)
-			)
+	var seen_ids: Dictionary = {}
 
+	for player_data in message.get("players", []):
+		var player_id := str(player_data["id"])
+		var position := protocol_to_godot(
+			float(player_data["x"]),
+			float(player_data["y"])
+		)
+
+		if player_id == local_player_id:
+			if local_player:
+				local_player.set_network_position(position)
+			continue
+
+		seen_ids[player_id] = true
+		update_remote_player(player_id, position)
+
+	remove_stale_remote_players(seen_ids)
 	update_flag(message.get("flag", {}))
+
+
+func update_remote_player(player_id: String, position: Vector3) -> void:
+	if not remote_players.has(player_id):
+		spawn_remote_player(player_id, position)
+	else:
+		remote_players[player_id].set_network_position(position)
+
+
+func update_known_player_names(player_list: Array) -> void:
+	known_player_names.clear()
+
+	for player_data in player_list:
+		known_player_names[str(player_data["id"])] = str(player_data["name"])
+
+
+func spawn_remote_player(player_id: String, position: Vector3) -> void:
+	var remote_player: Node3D = REMOTE_PLAYER_SCENE.instantiate()
+	add_child(remote_player)
+
+	remote_player.global_position = position
+	remote_player.set_network_position(position)
+
+	var label: Label3D = remote_player.get_node("NameLabel")
+
+	if label:
+		label.text = known_player_names.get(player_id, "Jugador")
+
+	remote_players[player_id] = remote_player
+
+
+func remove_stale_remote_players(seen_ids: Dictionary) -> void:
+	for player_id in remote_players.keys():
+		if not seen_ids.has(player_id):
+			remote_players[player_id].queue_free()
+			remote_players.erase(player_id)
+
+
+func clear_remote_players() -> void:
+	for player_id in remote_players.keys():
+		remote_players[player_id].queue_free()
+
+	remote_players.clear()
 
 
 func protocol_to_godot(x: float, y: float) -> Vector3:
@@ -228,12 +287,15 @@ func update_flag(flag_data: Dictionary) -> void:
 
 	var flag_owner: Variant = flag_data.get("owner")
 
-	if flag_owner != null and str(flag_owner) == local_player_id:
-		if flag.get_parent() != local_player:
-			flag.reparent(local_player)
+	if flag_owner != null:
+		var carrier := get_carrier_node(str(flag_owner))
 
-		flag.position = Vector3(1.2, 1.8, -1.5)
-		return
+		if carrier:
+			if flag.get_parent() != carrier:
+				flag.reparent(carrier)
+
+			flag.position = FLAG_CARRY_OFFSET
+			return
 
 	if flag.get_parent() != flag_original_parent:
 		flag.reparent(flag_original_parent)
@@ -245,9 +307,16 @@ func update_flag(flag_data: Dictionary) -> void:
 
 	flag.global_position = Vector3(
 		position.x,
-		0.1,
+		FLAG_GROUND_HEIGHT,
 		position.z
 	)
+
+
+func get_carrier_node(owner_id: String) -> Node3D:
+	if owner_id == local_player_id:
+		return local_player
+
+	return remote_players.get(owner_id) as Node3D
 
 
 func _on_server_selected(ip: String, port: int) -> void:

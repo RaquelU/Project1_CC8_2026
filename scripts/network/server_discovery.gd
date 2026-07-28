@@ -22,10 +22,10 @@ var retry_time := 0.0
 func start_discovery() -> void:
 	var broadcast_destinations := get_broadcast_destinations()
 
-	if broadcast_destinations.size() < 2:
+	if broadcast_destinations.size() <= 1:
 		print(
-			"ADVERTENCIA: falta el broadcast dirigido de la subred. ",
-			"Ejecuta el cliente con --broadcast=<BROADCAST_DE_SUBRED>."
+			"ADVERTENCIA: no se detectó ninguna interfaz de red local. ",
+			"Puedes indicar una manualmente con --broadcast=<BROADCAST_DE_SUBRED>."
 		)
 
 	start_search(broadcast_destinations)
@@ -94,6 +94,9 @@ func send_discover() -> void:
 func get_broadcast_destinations() -> Array[String]:
 	var result: Array[String] = [LIMITED_BROADCAST]
 
+	for address in get_local_ipv4_addresses():
+		result.append(guess_subnet_broadcast(address))
+
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--broadcast="):
 			var address := argument.get_slice("=", 1).strip_edges()
@@ -104,6 +107,31 @@ func get_broadcast_destinations() -> Array[String]:
 				print("Broadcast inválido ignorado: ", address)
 
 	return remove_duplicate_addresses(result)
+
+
+func get_local_ipv4_addresses() -> Array[String]:
+	var result: Array[String] = []
+
+	for address in IP.get_local_addresses():
+		if not is_valid_ipv4(address):
+			continue
+
+		if address.begins_with("127.") or address.begins_with("169.254."):
+			continue
+
+		result.append(address)
+
+	return result
+
+
+func guess_subnet_broadcast(address: String) -> String:
+	# Asume máscara /24, la más común tanto en redes domésticas como en
+	# subredes gestionadas de VPNs tipo ZeroTier. No es infalible para
+	# máscaras distintas, pero cubre el caso general sin depender de un
+	# flag manual. Para redes con otra máscara, --broadcast=<ip> sigue
+	# funcionando como respaldo explícito.
+	var parts := address.split(".")
+	return "%s.%s.%s.255" % [parts[0], parts[1], parts[2]]
 
 
 func remove_duplicate_addresses(addresses: Array[String]) -> Array[String]:

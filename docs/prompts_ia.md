@@ -1,4 +1,4 @@
-# Registro de prompts utilizados con inteligencia artificial (ChatGPT, GPT-5.6 Sol, Nivel de Inteligencia Media)
+# Registro de prompts utilizados con inteligencia artificial (ChatGPT, GPT-5.6 Sol, Nivel de Inteligencia Media / a partir de la versión 8, Claude Sonnet 5, Nivel de Inteligencia Media)
 
 ## Versión 3 — Jugador y reglas locales
 
@@ -162,3 +162,38 @@ Los cambios principales fueron:
 - Se comprobó el funcionamiento con dos clientes, countdown, partida completa y nueva ronda sin reconexión.
 
 La implementación permite iniciar el cliente sin argumentos adicionales en la terminal y realizar el proceso de búsqueda, selección y conexión desde la interfaz.
+
+## Versión 8 — Visualización multijugador completa y corrección del descubrimiento por VPN
+
+### Archivos relacionados
+
+- `scripts/network/game_client.gd`
+- `scripts/network/game_server.gd`
+- `scripts/network/server_discovery.gd`
+- `scripts/player/player.gd`
+- `scripts/player/remote_player.gd`
+- `scenes/player/remote_player.tscn`
+- `scenes/network/server.tscn`
+- `scenes/network/server_player_view.tscn`
+
+### Prompt utilizado
+
+Tengo mi proyecto casi terminado usando Godot 4.7 Stable con GDScript, y lo único que me falta ahora es que los jugadores conectados sean visibles entre ellos, porque ahora mismo cada cliente solo ve su propio movimiento por medio del mensaje state que ya me manda el servidor. Ayúdame a instanciar y actualizar visualmente a los demás jugadores dentro de game_world.tscn usando esa información sin tocar el protocolo. Luego, la bandera me queda muy escondida en el centro del jugador que la porta, ayúdame a mejorar visualmente su posición sin romper ninguna regla del protocolo ni del proyecto, adjunto de nuevo ambos PDF para que los tengas en cuenta en todo momento. También me gustaría que se notara hacia dónde mira el jugador (como el giro del mouse) desde la perspectiva de los demás, pero si eso implica agregar algo que ningún otro proyecto de la clase tiene, prefiero no tocarlo y mantenerme apegado al protocolo acordado por todos mis compáñeros. Ahora quiero implementar el servidor como debe de ser, porque por el momento solo funciona en la terminal y tengo entendido que no debería ser así según el enunciado del proyecto, así que ayúdame a que muestre visualmente el juego de todos los jugadores conectados. No me gusta que los nombres de los jugadores salgan tan grandes en esa vista porque casi no se ven las cápsulas por lo mismo, así también quiero saber qué tanta información realmente debe salir en el HUD del servidor según lo que pide el proyecto, y me gustaría que a los demás jugadores también les saliera su nombre en pequeño arriba dentro del cliente. Al final, dime si con esos últimos detalles mi proyecto pasaría a estar prácticamente completo con todos los requerimientos del proyecto y del protocolo. Por último, tuve un problema probando con una compañera por ZeroTier: a ella sí le sale mi servidor por descubrimiento de servidor, pero a mí no me sale el de ella, ayúdame a identificar y corregir esa parte del descubrimiento automático de subred.
+
+### Uso y modificaciones realizadas
+
+El código generado se utilizó como base para completar la representación visual multijugador que había quedado pendiente desde la versión 5, y para corregir un problema real de conectividad detectado en pruebas con una compañera de clase mediante ZeroTier.
+
+Los cambios principales fueron:
+
+- Se creó la representación visual de los jugadores remotos (cápsula con interpolación de posición) dentro de `game_world.tscn`, creándolos, actualizándolos y eliminándolos según el contenido del mensaje `state`.
+- Se corrigió que la bandera portada solo se reparentaba al jugador local; ahora se reparenta a cualquier portador, con una posición elevada para que no quede escondida en el cuerpo del jugador.
+- Se consideró agregar un campo opcional `rot` al mensaje `input`/`state` para replicar la orientación del jugador en los demás clientes. Se descartó la implementación por decisión propia, para no introducir una extensión del protocolo que ningún otro proyecto de la clase comparte.
+- Se transformó `server.tscn` de un nodo vacío controlado únicamente por consola a una escena con mapa visual, bandera, cámara cenital fija y un contenedor donde se instancian dinámicamente las cápsulas de los jugadores conectados, leyendo directamente el estado interno del servidor.
+- Se agregó un HUD simple en el servidor (fase de la partida, puerto TCP y cantidad de jugadores), ajustado a lo mínimo necesario para verificar visualmente que el servidor funciona, ya que el protocolo no exige un contenido específico de HUD.
+- Se corrigió el tamaño de las etiquetas de nombre de los jugadores, tanto en el servidor como en el cliente: el uso de `fixed_size` en `Label3D` hacía que el texto no escalara con la distancia de la cámara, viéndose desproporcionadamente grande.
+- Se agregó el nombre de cada jugador remoto sobre su cápsula dentro del cliente, capturado desde el mensaje `lobby`.
+- Se corrigió el descubrimiento UDP para que detecte automáticamente todas las direcciones IPv4 locales (incluyendo la de adaptadores VPN como ZeroTier) y calcule el broadcast de cada subred, en lugar de depender de que el usuario indicara manualmente `--broadcast=<ip>`. Se filtraron además las direcciones `169.254.x.x` de interfaces inactivas, que generaban errores de envío sin ningún efecto real.
+- Se realizó una prueba con una compañera de clase por ZeroTier, confirmando que el descubrimiento pasó de ser asimétrico (ella me encontraba, yo no la encontraba a ella) a funcionar correctamente en ambos sentidos sin argumentos manuales.
+
+La implementación resultante cumple con el requisito del enunciado de que el modo servidor únicamente debe mostrar el juego de todos los jugadores conectados, y corrige una limitación real de conectividad entre proyectos distintos sobre redes VPN.

@@ -27,6 +27,10 @@ const MAP_MAX := MAP_SIZE - PLAYER_RADIUS
 const CENTER := Vector2(500.0, 500.0)
 const VICTORY_DISTANCE := CIRCLE_RADIUS + PLAYER_RADIUS
 
+const SERVER_PLAYER_SCENE: PackedScene = preload("res://scenes/network/server_player_view.tscn")
+const FLAG_CARRY_OFFSET := Vector3(0.0, 3.6, -1.6)
+const FLAG_GROUND_HEIGHT := 0.1
+
 var tcp_server := TCPServer.new()
 var udp_server := UDPServer.new()
 
@@ -49,9 +53,18 @@ var flag: Dictionary = {
 var owner_was_inside := false
 var random := RandomNumberGenerator.new()
 
+var player_visuals: Dictionary = {}
+var flag_visual_original_parent: Node
+
+@onready var players_container: Node3D = $PlayersContainer
+@onready var flag_visual: Node3D = $GameplayArea/Flag
+@onready var status_label: Label = $UI/StatusLabel
+
 
 func _ready() -> void:
 	random.randomize()
+
+	flag_visual_original_parent = flag_visual.get_parent()
 
 	if tcp_server.listen(TCP_PORT) != OK:
 		push_error("No se pudo iniciar el servidor TCP.")
@@ -65,6 +78,8 @@ func _ready() -> void:
 
 	print("Servidor TCP iniciado en el puerto ", TCP_PORT)
 	print("Descubrimiento UDP activo en el puerto ", UDP_PORT)
+
+	update_status_label()
 
 
 func _process(delta: float) -> void:
@@ -82,6 +97,8 @@ func _process(delta: float) -> void:
 
 			if phase == "playing":
 				broadcast_state()
+
+	update_visuals()
 
 
 func accept_new_clients() -> void:
@@ -753,3 +770,96 @@ func is_protocol_integer(value: Variant) -> bool:
 
 	var numeric_value: float = float(value)
 	return numeric_value == floor(numeric_value)
+
+
+func update_visuals() -> void:
+	sync_player_visuals()
+	sync_flag_visual()
+	update_status_label()
+
+
+func sync_player_visuals() -> void:
+	var seen_ids: Dictionary = {}
+
+	for player_id in players:
+		seen_ids[player_id] = true
+
+		var player: Dictionary = players[player_id]
+		var position := protocol_to_godot(float(player["x"]), float(player["y"]))
+
+		if not player_visuals.has(player_id):
+			spawn_player_visual(player_id, str(player["name"]), position)
+		else:
+			var visual: Node3D = player_visuals[player_id]
+			visual.global_position = position
+
+	for player_id in player_visuals.keys():
+		if not seen_ids.has(player_id):
+			player_visuals[player_id].queue_free()
+			player_visuals.erase(player_id)
+
+
+func spawn_player_visual(player_id: String, player_name: String, position: Vector3) -> void:
+	var visual: Node3D = SERVER_PLAYER_SCENE.instantiate()
+	players_container.add_child(visual)
+	visual.global_position = position
+
+	var label: Label3D = visual.get_node("NameLabel")
+
+	if label:
+		label.text = player_name
+
+	player_visuals[player_id] = visual
+
+
+func sync_flag_visual() -> void:
+	var owner_value: Variant = flag.get("owner")
+
+	if owner_value != null:
+		var carrier: Node3D = player_visuals.get(str(owner_value)) as Node3D
+
+		if carrier:
+			if flag_visual.get_parent() != carrier:
+				flag_visual.reparent(carrier)
+
+			flag_visual.position = FLAG_CARRY_OFFSET
+			return
+
+	if flag_visual.get_parent() != flag_visual_original_parent:
+		flag_visual.reparent(flag_visual_original_parent)
+
+	var position := protocol_to_godot(float(flag["x"]), float(flag["y"]))
+
+	flag_visual.global_position = Vector3(
+		position.x,
+		FLAG_GROUND_HEIGHT,
+		position.z
+	)
+
+
+func update_status_label() -> void:
+	var phase_names := {
+		"lobby": "Lobby",
+		"countdown": "Cuenta regresiva",
+		"playing": "En partida",
+		"finished": "Fin de partida"
+	}
+
+	status_label.text = (
+		"%s\nPuerto TCP: %d\nFase: %s\nJugadores: %d / %d"
+		% [
+			SERVER_NAME,
+			TCP_PORT,
+			phase_names.get(phase, phase),
+			players.size(),
+			MAX_PLAYERS
+		]
+	)
+
+
+func protocol_to_godot(x: float, y: float) -> Vector3:
+	return Vector3(
+		(x - 500.0) / 10.0,
+		0.0,
+		(y - 500.0) / 10.0
+	)
