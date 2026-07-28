@@ -242,3 +242,62 @@ Se comprobó el descubrimiento automático mediante UDP y la conexión simultán
 ### Próxima versión
 
 Crear la representación visual de los jugadores remotos y actualizar sus posiciones con los mensajes `state`.
+
+## Versión 6 - Adaptación al protocolo actualizado y prueba mediante VPN
+
+**Estado:** Completada para prueba remota entre dos computadoras  
+**Commit:** `feat: adaptar red y reglas al protocolo actualizado`
+
+### Cambios de ideas
+
+Debido a que se hizo un cambio tres dias antes de la entrega del proyecto, la version esperada con la representacion visual de los jugadores remotos fue
+modificada y la version seis ahora posee los cambios del "nuevo protocolo". 
+
+### Cambios realizados
+
+- Se actualizó la implementación de red para cumplir con la versión vigente del protocolo.
+- Se reforzó el procesamiento de mensajes JSON, el framing TCP y las validaciones de entrada.
+- Se implementó el ciclo completo de la partida con regreso automático al lobby.
+- Se ajustaron el spawn, la captura, el robo, la victoria y las desconexiones según las reglas oficiales.
+- Se mantuvo UDP exclusivamente para descubrimiento y TCP para toda la comunicación del juego.
+- Se agregaron las vías de conexión por broadcast, UDP unicast y TCP directo desde terminal.
+- Se mantuvo al servidor como autoridad de posiciones, bandera y resultado de la partida.
+
+### Prueba realizada
+
+La prueba se realizó entre dos computadoras conectadas mediante ZeroTier:
+
+1. El servidor se ejecutó en una computadora.
+2. El segundo cliente utilizó la IP virtual del servidor.
+3. El cliente envió `discover` por UDP al puerto `8888`.
+4. Recibió `server_info` con el puerto TCP anunciado.
+5. Se estableció la conexión TCP.
+6. Ambos jugadores recibieron el countdown y pudieron participar en la partida.
+7. Se comprobó el movimiento, la captura, el robo, la victoria y el inicio de una nueva ronda sin reconectarse.
+
+La evidencia se guardó en:
+
+`tests/evidence/prueba_vpn_cliente1.png`
+`tests/evidence/prueba_vpn_cliente2.png`
+
+### Uso de inteligencia artificial
+
+Se utilizó ChatGPT como apoyo para revisar el protocolo actualizado y adaptar los scripts de red conservando una estructura clara y compatible.
+
+El prompt utilizado y las modificaciones realizadas se encuentran documentados en:
+
+`docs/prompts_ia.md`
+`docs/prompts_ia/prompt_cambio_protocolo.png`
+
+### Resultado
+
+Se comprobó que el cliente y el servidor pueden comunicarse entre dos computadoras distintas mediante descubrimiento UDP unicast y conexión TCP, manteniendo las reglas principales del protocolo.
+
+### Limitaciones actuales
+
+- La selección y configuración de conexión todavía se realiza desde la terminal.
+- La interfaz gráfica para descubrir y seleccionar servidores queda pendiente.
+
+### Próxima versión
+
+Crear una interfaz para mostrar servidores encontrados, seleccionar uno y realizar la conexión sin utilizar argumentos de terminal.

@@ -102,3 +102,31 @@ Durante las pruebas se realizaron los siguientes ajustes:
 - La representación visual de los otros jugadores quedó pendiente para la siguiente etapa.
 
 La prueba confirmó el descubrimiento UDP y la conexión simultánea de dos clientes. Todavía falta crear la representación visual de los jugadores remotos dentro del escenario 3D.
+
+## Versión 6 — Adaptación al protocolo actualizado y prueba mediante VPN
+
+### Archivos relacionados
+
+- `scripts/network/game_server.gd`
+- `scripts/network/game_client.gd`
+- `scripts/network/server_discovery.gd`
+- `scripts/player/player.gd`
+
+### Prompt utilizado
+
+bien, ahora partiendo desde la version 5, hubieron cambios ligeros en la implementacion del protocolo, por lo tanto el objetivo en este momento es que todo funcione con este nuevo enfoque. Obteniendo informacion de mis demas compañeros, la forma en que lo prueban es utilizando una VPN, ya que utilizando la red de nuestra universidad (Universidad Galileo) parece tener ciertas restricciones, entonces, el siguiente paso es llevar esta nueva version a que adapte todas las nuevas implementaciones y/o modificaciones del protocolo, para asegurarnos que todos puedan encontrar mi servidor, y yo como cliente puede encontrar el servidor de mis compañeros por medio de esa VPN, entonces, te hago envio del PDF y el link de repositorio de github para que puedas analizar y en base a eso implementar un codigo mucho mas robusto, optimo, limpio, entendible, y a un nivel de programador senior. Luego, haremos unas pruebas primero haciendo yo la prueba y luego hacer pruebas con mis demas compañeros. Asi tambien, al finalizar, quiero que me des opciones para asegurar que se pueda hacer la conexion y no tener problemas al intentarlo. https://github.com/citruspunch/cc8-2026-ctf-spec
+
+### Uso y modificaciones realizadas
+
+El código generado se utilizó como base para adaptar la versión 5 al protocolo actualizado de la clase.
+
+Los cambios principales fueron:
+
+- Se ajustó el ciclo completo de la partida: lobby, countdown, partida, fin y regreso automático al lobby.
+- Se reforzó la validación de mensajes, fases, nombres, direcciones y tamaño máximo permitido.
+- Se implementó el spawn aleatorio en el anillo definido por el protocolo.
+- Se corrigió la lógica de captura, robo y victoria para que el servidor conserve toda la autoridad.
+- Se mantuvo UDP únicamente para descubrimiento y TCP para toda la partida.
+- Se agregó descubrimiento por broadcast, descubrimiento UDP unicast y conexión TCP directa como respaldo.
+- Se mantuvo el manejo por terminal, sin interfaz gráfica.
+- Se realizó una prueba entre dos computadoras conectadas (una amiga utilizando el mismo proyecto desde su casa) mediante ZeroTier, comprobando descubrimiento UDP unicast y conexión TCP al puerto anunciado.
