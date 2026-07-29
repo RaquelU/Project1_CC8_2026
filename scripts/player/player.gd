@@ -33,9 +33,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			deg_to_rad(80.0)
 		)
 
-	if event.is_action_pressed("ui_cancel"):
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-
 	if event.is_action_pressed("interact") and network_client:
 		network_client.send_interact()
 		

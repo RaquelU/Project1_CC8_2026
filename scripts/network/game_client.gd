@@ -4,7 +4,7 @@ const PROTOCOL_VERSION := 1
 const MESSAGE_MAX_SIZE := 64 * 1024
 const REMOTE_PLAYER_SCENE: PackedScene = preload("res://scenes/player/remote_player.tscn")
 
-const FLAG_CARRY_OFFSET := Vector3(0.0, 1.5, -1.8)
+const FLAG_CARRY_OFFSET := Vector3(0.0, 3.6, -1.6)
 const FLAG_GROUND_HEIGHT := 0.1
 
 @export var server_ip := "127.0.0.1"
@@ -12,6 +12,7 @@ const FLAG_GROUND_HEIGHT := 0.1
 @export var player_name := "Jugador local"
 
 @onready var server_discovery: Node = $"../ServerDiscovery"
+@onready var countdown_label: Label = $"../UI/CountdownLabel"
 
 var peer := StreamPeerTCP.new()
 var buffer := ""
@@ -66,6 +67,7 @@ func _process(_delta: float) -> void:
 		join_sent = false
 		game_started = false
 		clear_remote_players()
+		hide_countdown()
 		print("Servidor desconectado.")
 
 
@@ -91,6 +93,21 @@ func connect_with_address(ip: String, port: int) -> void:
 	server_ip = ip
 	server_port = port
 	connect_to_server()
+
+
+func disconnect_from_server() -> void:
+	peer.disconnect_from_host()
+
+	buffer = ""
+	connected = false
+	join_sent = false
+	game_started = false
+	last_direction = Vector2(99.0, 99.0)
+
+	clear_remote_players()
+	hide_countdown()
+
+	print("Desconectado por el jugador. Volviendo al menú.")
 
 func send_join() -> void:
 	join_sent = true
@@ -186,15 +203,18 @@ func handle_message(message: Dictionary) -> void:
 			last_direction = Vector2(99.0, 99.0)
 			clear_remote_players()
 			update_known_player_names(message.get("players", []))
+			hide_countdown()
 			print("Jugadores en lobby: ", message.get("players", []).size())
 
 		"countdown":
 			game_started = false
+			show_countdown(int(message["seconds"]))
 			print("La partida inicia en ", message["seconds"])
 
 		"start":
 			game_started = true
 			last_direction = Vector2(99.0, 99.0)
+			hide_countdown()
 			print("Partida iniciada.")
 
 		"state":
@@ -202,10 +222,24 @@ func handle_message(message: Dictionary) -> void:
 
 		"game_over":
 			game_started = false
+			hide_countdown()
 			print("Ganador: ", message["winner"])
 
 		"error":
 			print("Error del servidor: ", message["reason"])
+
+
+func show_countdown(seconds: int) -> void:
+	if not countdown_label:
+		return
+
+	countdown_label.text = str(seconds)
+	countdown_label.visible = true
+
+
+func hide_countdown() -> void:
+	if countdown_label:
+		countdown_label.visible = false
 
 
 func apply_state(message: Dictionary) -> void:

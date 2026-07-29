@@ -154,3 +154,18 @@ func apply_player_name() -> void:
 func _on_connection_completed() -> void:
 	hide()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+func reset_and_show() -> void:
+	servers.clear()
+	server_list.clear()
+
+	connect_button.disabled = true
+	search_button.disabled = false
+	discover_ip_button.disabled = false
+	direct_connect_button.disabled = false
+
+	search_status_label.text = "Presiona Buscar servidores."
+
+	show()
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE

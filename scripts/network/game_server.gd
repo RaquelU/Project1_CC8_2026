@@ -17,7 +17,7 @@ const SPEED := 200.0
 const TICK_RATE := 20.0
 
 const COUNTDOWN_SECONDS := 5
-const MIN_PLAYERS := 2
+const MIN_PLAYERS := 16
 const POST_GAME_SECONDS := 5.0
 const SPAWN_RADIUS_MIN := 350.0
 const SPAWN_RADIUS_MAX := 450.0

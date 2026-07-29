@@ -246,7 +246,7 @@ func finish_discovery() -> void:
 
 	if discovered_servers.is_empty():
 		print("No se encontraron servidores.")
-		discovery_finished.emit([])
+		discovery_finished.emit(discovered_servers.duplicate(true))
 		return
 
 	print("Servidores disponibles:")

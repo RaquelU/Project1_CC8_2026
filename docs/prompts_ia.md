@@ -197,3 +197,29 @@ Los cambios principales fueron:
 - Se realizó una prueba con una compañera de clase por ZeroTier, confirmando que el descubrimiento pasó de ser asimétrico (ella me encontraba, yo no la encontraba a ella) a funcionar correctamente en ambos sentidos sin argumentos manuales.
 
 La implementación resultante cumple con el requisito del enunciado de que el modo servidor únicamente debe mostrar el juego de todos los jugadores conectados, y corrige una limitación real de conectividad entre proyectos distintos sobre redes VPN.
+
+## Versión 9 — Conteo regresivo visual, menú de pausa y filtro de servidores propios
+
+### Archivos relacionados
+
+- `scenes/levels/game_world.tscn`
+- `scripts/network/game_client.gd`
+- `scripts/network/server_discovery.gd`
+- `scripts/player/player.gd`
+- `scripts/ui/pause_menu.gd`
+- `scripts/ui/server_browser.gd`
+- `scenes/ui/pause_menu.tscn`
+
+### Prompt utilizado
+
+Me gustaría poder agregar la parte del conteo visualmente en la pantalla para que no aparezca eso en la terminal. También me gustaría agregar la parte de que puedan regresar al menú de inicio, ya sea apretando ESC y dándole a regresar a esa interfaz. Pero entonces, en vez de regresar a la búsqueda de servidores, mejor que sea el botón de reanudar y salir, es decir que cierre el programa por completo, ya que al estar como está comete ciertos bugs como que la bandera desaparece en la siguiente partida, cosa que ya no tengo tiempo para arreglar, entonces vamos a hacerlo mucho más simple de esa manera. Todo lo demás funciona bien. También me gustaría ver si se puede filtrar los servidores míos que me aparecen varios a mí, o es algo que toma tiempo ver eso, ya que realmente no los uso y me hace estorbo visualmente.
+
+### Uso y modificaciones realizadas
+
+El código generado se utilizó para tres mejoras puntuales de usabilidad detectadas durante las pruebas manuales del juego ya funcional.
+
+- Se agregó un `Label` centrado en pantalla para mostrar el número del conteo regresivo (5 a 1), controlado desde `game_client.gd` al recibir el mensaje `countdown`, y oculto automáticamente al iniciar la partida, volver al lobby, terminar la ronda o desconectarse.
+- Se creó un menú de pausa activado con ESC, con las opciones de reanudar la partida (sin desconectar) y salir. La primera versión de "salir" en realidad desconectaba del servidor y regresaba al buscador de servidores para poder unirse a otra partida sin cerrar el programa; al detectarse bugs con ese flujo (la bandera desaparece en la ronda siguiente tras reconectar) y no haber tiempo para diagnosticar la causa, se decidió simplificar la función del botón para que cierre el programa por completo en su lugar.
+- Se filtraron del listado de servidores encontrados aquellas respuestas cuya IP de origen coincide con una de las direcciones IPv4 propias de la máquina, evitando ver el propio servidor repetido por cada interfaz de red virtual activa (VMware, VirtualBox, ZeroTier, etc.).
+
+Estos cambios no modifican el protocolo de comunicación; son ajustes de presentación en el cliente y de filtrado en la interfaz de descubrimiento.

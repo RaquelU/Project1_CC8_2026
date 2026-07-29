@@ -413,3 +413,39 @@ Todos los jugadores conectados son ahora visibles entre sí dentro del cliente (
 ### Próxima versión
 
 Completar la documentación final del proyecto (bitácora, prompts de IA y referencias al historial de Git) y validar la entrega completa contra el protocolo y el enunciado del proyecto.
+
+## Versión 9 - Conteo regresivo visual, menú de pausa y filtro de servidores propios
+
+**Estado:** Completada
+**Commit:** `feat: agregar conteo visual, menú de pausa y filtrar servidores propios en la búsqueda`
+
+### Cambios realizados
+
+- Se agregó un `Label` centrado en pantalla (`UI/CountdownLabel` dentro de `game_world.tscn`) que muestra el número del conteo regresivo (5, 4, 3, 2, 1) recibido en el mensaje `countdown`, en lugar de que solo apareciera impreso en la terminal. Se oculta automáticamente al iniciar la partida, al volver al lobby, al terminar la ronda o al perder la conexión.
+- Se agregó un menú de pausa (`scenes/ui/pause_menu.tscn` y `scripts/ui/pause_menu.gd`) que se abre con la tecla ESC durante la partida, libera el mouse y ofrece la opción de **Reanudar** (cierra el menú y vuelve a capturar el mouse sin afectar la conexión).
+- Se corrigió el descubrimiento de servidores para que no muestre entradas repetidas del propio servidor cuando la máquina tiene varias interfaces de red activas (Wi-Fi, VMware, VirtualBox, ZeroTier, etc.): en `server_discovery.gd`, `register_server()` ahora descarta cualquier respuesta cuya IP de origen coincida con una de las direcciones IPv4 locales de la propia máquina.
+
+### Cambios de idea
+
+Inicialmente el menú de pausa incluía un botón "Volver al menú" que desconectaba del servidor y regresaba a la pantalla de búsqueda (`ServerBrowser`), permitiendo conectarse a otra partida sin cerrar el programa. Durante las pruebas se detectaron bugs derivados de ese flujo (por ejemplo, la bandera desaparece en la siguiente partida tras reconectar). Por falta de tiempo para investigar y corregir la causa raíz antes de la entrega, se simplificó la función de ese botón: ahora se llama **Salir** y cierra el programa por completo (`get_tree().quit()`), evitando el estado inconsistente sin necesidad de depurar el flujo de reconexión.
+
+### Uso de inteligencia artificial
+
+Se continuó utilizando **Claude Sonnet 5 (Nivel de Inteligencia Media)**.
+
+El prompt utilizado se encuentran documentados en:
+
+`docs/prompts_ia.md`
+
+### Resultado
+
+El jugador ahora ve el conteo regresivo directamente en pantalla, puede pausar la partida con ESC sin perder la captura del mouse accidentalmente, y la lista de servidores encontrados ya no se satura con el propio servidor repetido por cada interfaz de red local.
+
+### Limitaciones actuales
+
+- El botón de pausa no ofrece una forma de volver al buscador de servidores sin cerrar el programa; hacerlo de forma segura requeriría corregir el bug de la bandera al reconectar, lo cual queda fuera del alcance de esta entrega por tiempo.
+- El filtro de servidores propios asume que ninguna de las IPs locales de la máquina coincide nunca con un servidor real de otro compañero, lo cual es correcto en la práctica pero no es una garantía protocolar, solo una heurística de descubrimiento.
+
+### Próxima versión
+
+Completar la documentación final del proyecto (bitácora, prompts de IA y referencias al historial de Git) y dejar el repositorio listo para la entrega.

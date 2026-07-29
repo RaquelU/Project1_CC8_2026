@@ -5,6 +5,8 @@
 [ext_resource type="Script" uid="uid://dlyef2bpjka8o" path="res://scripts/network/server_discovery.gd" id="3_4r7d4"]
 [ext_resource type="PackedScene" uid="uid://b5e5g7pfopnkq" path="res://scenes/ui/server_browser.tscn" id="4_7y55x"]
 [ext_resource type="Script" uid="uid://dnm1jx02ynkub" path="res://scripts/ui/server_browser.gd" id="5_hyc8p"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="6_pause"]
+[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="7_pause"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_upt1h"]
 albedo_color = Color(0.37871593, 0.21920899, 0, 1)
@@ -107,3 +109,24 @@ script = ExtResource("3_4r7d4")
 
 [node name="ServerBrowser" parent="UI" unique_id=752566293 instance=ExtResource("4_7y55x")]
 script = ExtResource("5_hyc8p")
+
+[node name="CountdownLabel" type="Label" parent="UI"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -100.0
+offset_right = 100.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 128
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "5"
+
+[node name="PauseMenu" parent="UI" instance=ExtResource("6_pause")]
+script = ExtResource("7_pause")
