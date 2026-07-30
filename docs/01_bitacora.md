@@ -449,3 +449,51 @@ El jugador ahora ve el conteo regresivo directamente en pantalla, puede pausar l
 ### Próxima versión
 
 Completar la documentación final del proyecto (bitácora, prompts de IA y referencias al historial de Git) y dejar el repositorio listo para la entrega.
+
+## Versión 10 - Corrección de conexión, mouse y bandera; paneles visuales e inicio manual de partida
+
+**Estado:** Completada
+**Commit:** `feat: corregir conexión bloqueada, mouse y bandera; agregar paneles visuales e inicio manual de partida`
+
+### Cambios realizados
+
+- Se corrigió que el botón **Conectar** de `server_browser.tscn` quedara bloqueado de forma permanente cuando el servidor no respondía (dirección o puerto incorrectos, firewall, servidor apagado). `game_client.gd` ahora distingue explícitamente los estados `STATUS_CONNECTING`, `STATUS_CONNECTED`, `STATUS_ERROR` y `STATUS_NONE` de `StreamPeerTCP`, y aplica un tiempo máximo de espera de 6 segundos antes de considerar fallido un intento de conexión. Se agregó la señal `connection_failed`, escuchada por `server_browser.gd` para reactivar los botones de búsqueda y conexión y mostrar el motivo del fallo.
+- Se corrigió la captura prematura del mouse: `player.gd` capturaba el mouse (`Input.mouse_mode = MOUSE_MODE_CAPTURED`) desde su `_ready()`, es decir, en cuanto se cargaba la escena del cliente y no cuando el jugador realmente se conectaba, lo que ocultaba el cursor e impedía mover o interactuar con la ventana mientras aún se mostraba el buscador de servidores. Se eliminó esa línea; la captura del mouse ahora ocurre únicamente cuando `server_browser.gd` confirma la conexión.
+- Se corrigió un error donde la bandera dejaba de aparecer a partir de la segunda partida en adelante: al reparentar la bandera al jugador que la portaba, tanto `game_client.gd` como `game_server.gd` liberaban después ese mismo nodo jugador con `queue_free()` al volver al lobby o al desconectarse un jugador, y Godot libera también a los hijos de un nodo liberado, destruyendo la bandera junto con su portador. Se agregaron las funciones `release_flag_from_node()` (cliente) y `release_flag_visual_from_node()` (servidor), que reparentan la bandera a su nodo original antes de liberar cualquier jugador que pudiera ser su padre actual.
+- Se creó `scripts/ui/info_panel.gd`, un panel reutilizable ubicado en la esquina superior derecha tanto del cliente (`game_world.tscn`) como del servidor (`server.tscn`), que muestra un registro con hora de los eventos relevantes -antes visibles únicamente en la terminal- y la lista de jugadores conectados. La terminal se conserva en paralelo para depurar errores que no se muestran en el panel.
+- Se actualizaron `game_client.gd` y `game_server.gd` para enviar cada evento relevante tanto a la terminal (`print`) como al panel visual, mediante una función auxiliar `_log()`, y para refrescar la lista de jugadores del panel cada vez que cambia el lobby.
+- Se reemplazó el requisito de un mínimo fijo de jugadores por un inicio controlado manualmente: se eliminó la constante `MIN_PLAYERS` y sus validaciones asociadas en `game_server.gd`. El botón **Iniciar partida** permanece habilitado mientras la fase sea lobby y haya al menos un jugador conectado, y es el anfitrión quien decide, al presionarlo, cuándo comenzar la cuenta regresiva.
+
+### Cambios de idea
+
+La versión 9 había descartado la opción "Volver al menú" en el menú de pausa por un bug donde la bandera desaparecía tras reconectar. Esta versión corrige la causa raíz de ese bug (la liberación accidental de la bandera junto a su portador al usar `queue_free()`), pero reincorporar esa opción del menú de pausa no formó parte del alcance solicitado en esta etapa, por lo que el menú de pausa conserva únicamente Reanudar y Salir; queda como trabajo pendiente para una futura versión.
+
+### Prueba realizada
+
+- Se intentó conectar a una dirección IP sin servidor activo: el cliente esperó el tiempo máximo configurado, mostró un mensaje de error y reactivó los botones de búsqueda y conexión sin necesidad de reiniciar el programa.
+- Se comprobó que, al abrir el cliente, el cursor del mouse permanece visible y la ventana puede moverse y utilizarse con normalidad mientras se muestra el buscador de servidores.
+- Se jugaron dos rondas consecutivas en la misma sesión y se comprobó que la bandera continúa apareciendo correctamente en la segunda ronda y en las siguientes, incluso cuando fue portada por un jugador remoto en la ronda anterior.
+- Se verificó que el panel visual del cliente y del servidor muestra los mismos eventos que antes solo aparecían en la terminal, junto con la lista de jugadores conectados.
+- Se comprobó que el botón Iniciar partida permanece habilitado con un solo jugador conectado y que la partida inicia al presionarlo, sin esperar un número mínimo adicional.
+
+### Uso de inteligencia artificial
+
+Se continuó utilizando **Claude Sonnet 5 (Nivel de Inteligencia Media)**.
+
+El prompt utilizado se encuentra documentado en:
+
+`docs/prompts_ia.md`
+
+### Resultado
+
+El flujo de conexión ya no puede quedar bloqueado de forma irrecuperable, el mouse y la ventana se comportan correctamente antes de conectarse, la bandera funciona de manera consistente en todas las rondas de una sesión, y tanto el cliente como el servidor exponen su información relevante directamente en pantalla. El anfitrión controla manualmente el inicio de cada partida mediante un botón, sin depender de un mínimo fijo de jugadores.
+
+### Limitaciones actuales
+
+- La opción de volver al buscador de servidores desde el menú de pausa sigue sin estar disponible; esta versión corrige la causa raíz del bug que originalmente la bloqueó (versión 9), pero reincorporarla no formó parte del alcance de esta versión.
+- El panel visual conserva únicamente las últimas líneas del registro; el historial completo de una sesión larga solo se conserva en la terminal.
+- Con cero jugadores conectados, el botón de inicio permanece deshabilitado; esto es intencional para evitar iniciar una partida vacía.
+
+### Próxima versión
+
+Evaluar la reincorporación de la opción "volver al buscador de servidores" en el menú de pausa, ahora que el bug de la bandera que la bloqueaba está corregido, y completar la prueba de interoperabilidad formal con los proyectos heterogéneos de toda la clase.

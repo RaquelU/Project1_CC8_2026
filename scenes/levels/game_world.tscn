@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://dnm1jx02ynkub" path="res://scripts/ui/server_browser.gd" id="5_hyc8p"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="6_pause"]
 [ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="7_pause"]
+[ext_resource type="Script" path="res://scripts/ui/info_panel.gd" id="8_infopanel"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_upt1h"]
 albedo_color = Color(0.37871593, 0.21920899, 0, 1)
@@ -130,3 +131,54 @@ text = "5"
 
 [node name="PauseMenu" parent="UI" instance=ExtResource("6_pause")]
 script = ExtResource("7_pause")
+
+[node name="InfoPanel" type="PanelContainer" parent="UI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -320.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 260.0
+grow_horizontal = 0
+script = ExtResource("8_infopanel")
+panel_title = "Registro del cliente"
+
+[node name="Margin" type="MarginContainer" parent="UI/InfoPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="UI/InfoPanel/Margin"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="UI/InfoPanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Registro del cliente"
+
+[node name="LogText" type="RichTextLabel" parent="UI/InfoPanel/Margin/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(290, 130)
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 13
+bbcode_enabled = false
+scroll_following = true
+
+[node name="HSeparator" type="HSeparator" parent="UI/InfoPanel/Margin/VBox"]
+layout_mode = 2
+
+[node name="PlayersLabel" type="Label" parent="UI/InfoPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Jugadores conectados:"
+
+[node name="PlayersText" type="RichTextLabel" parent="UI/InfoPanel/Margin/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(290, 70)
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 13
+bbcode_enabled = false

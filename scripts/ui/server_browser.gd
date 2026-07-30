@@ -18,6 +18,7 @@ var servers: Array[Dictionary] = []
 
 func _ready() -> void:
 	network_client.connection_completed.connect(_on_connection_completed)
+	network_client.connection_failed.connect(_on_connection_failed)
 	search_button.pressed.connect(_on_search_pressed)
 	connect_button.pressed.connect(_on_connect_pressed)
 	discover_ip_button.pressed.connect(_on_discover_ip_pressed)
@@ -140,6 +141,21 @@ func _on_direct_connect_pressed() -> void:
 	discover_ip_button.disabled = true
 	
 	network_client.connect_with_address(ip, port)
+
+
+func _on_connection_failed(reason: String) -> void:
+	var messages := {
+		"TIMEOUT": "No se pudo conectar: tiempo de espera agotado.",
+		"CONNECTION_ERROR": "No se pudo conectar con el servidor.",
+		"CONNECT_FAILED": "No se pudo iniciar la conexión.",
+	}
+
+	search_status_label.text = messages.get(reason, "No se pudo conectar con el servidor.")
+
+	search_button.disabled = false
+	discover_ip_button.disabled = false
+	direct_connect_button.disabled = false
+	connect_button.disabled = servers.is_empty()
 
 
 func apply_player_name() -> void:

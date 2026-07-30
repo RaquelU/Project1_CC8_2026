@@ -223,3 +223,31 @@ El código generado se utilizó para tres mejoras puntuales de usabilidad detect
 - Se filtraron del listado de servidores encontrados aquellas respuestas cuya IP de origen coincide con una de las direcciones IPv4 propias de la máquina, evitando ver el propio servidor repetido por cada interfaz de red virtual activa (VMware, VirtualBox, ZeroTier, etc.).
 
 Estos cambios no modifican el protocolo de comunicación; son ajustes de presentación en el cliente y de filtrado en la interfaz de descubrimiento.
+
+## Versión 10 — Corrección de conexión, mouse y bandera; paneles visuales e inicio manual de partida
+
+### Archivos relacionados
+
+- `scripts/network/game_client.gd`
+- `scripts/network/game_server.gd`
+- `scripts/ui/server_browser.gd`
+- `scripts/player/player.gd`
+- `scripts/ui/info_panel.gd`
+- `scenes/network/server.tscn`
+- `scenes/levels/game_world.tscn`
+
+### Prompt utilizado
+
+Tengo varios problemas, el primero es que al abrir el cliente, en la parte de buscar servidores y conectar, cuando presiono buscar servidores puedo hacerlo varias veces, sin embargo, al presionar conectar, si se queda trabado ya no puedo hacer nada, ni refrescar, entonces me gustaría arreglarlo. Así también, cuando abro el cliente mi mouse desaparece y no puedo ni siquiera mover la ventana del cliente y demás. Aparte de eso, quisiera migrar toda la información importante que da la terminal a mi parte visual del servidor, así también para el cliente (pueden estar en la esquina superior derecha, no tan grande, puede ser pequeño, incluso podría ser los propios mensajes de la terminal en un cuadro pequeño del lado superior derecho de la ventana con esa información, para no verlo en la terminal, esto tanto para el servidor como el cliente). Haz que siga mandando info por la terminal para siempre ver errores que no se ven en el cliente. También agrega que se vea el nombre de quienes se conectaron (por ejemplo que en la parte de cliente se vean los conectados en el lobby o los nombres en la esquina superior derecha abajo de lo que sale en la terminal). También tengo otro error y es que cuando la partida se reinicia del servidor, la bandera ya no aparece, aparece solo en la primera partida y luego ya no, arréglalo también. Por último, en lugar de depender de un mínimo de jugadores para poder iniciar, agrega un botón para iniciar la partida manualmente en vez del mínimo de jugadores, para que sea yo, como anfitrión, quien decida cuándo empezar.
+
+### Uso y modificaciones realizadas
+
+El código generado se utilizó para corregir errores de usabilidad detectados durante el uso del cliente y el servidor ya funcionales, y para reemplazar una regla fija (mínimo de jugadores) por control manual del anfitrión.
+
+- Se corrigió que el botón Conectar quedara bloqueado permanentemente ante fallos de conexión: se agregó un tiempo máximo de espera y manejo explícito de los estados de `StreamPeerTCP` en `game_client.gd`, con una señal `connection_failed` escuchada por `server_browser.gd` para reactivar los controles.
+- Se corrigió la captura prematura del mouse en `player.gd`, que ocurría al cargar la escena del cliente en lugar de al conectarse, impidiendo mover o usar la ventana antes de jugar.
+- Se identificó y corrigió la causa raíz de que la bandera desapareciera a partir de la segunda partida: se liberaba junto con el nodo del jugador que la portaba al limpiar jugadores remotos (cliente) o visuales desconectadas (servidor), ya que Godot libera también a los hijos de un nodo liberado con `queue_free()`. Se agregaron funciones que reparentan la bandera de forma segura antes de liberar esos nodos.
+- Se creó `scripts/ui/info_panel.gd`, un panel visual reutilizable para la esquina superior derecha del cliente y del servidor, con un registro de eventos (con hora) y la lista de jugadores conectados, alimentado por los mismos eventos que se siguen imprimiendo en la terminal para depuración.
+- Se eliminó la constante `MIN_PLAYERS` y sus validaciones en `game_server.gd`; el botón Iniciar partida ahora permanece habilitado con al menos un jugador conectado, y es el anfitrión quien decide manualmente cuándo iniciar la cuenta regresiva.
+
+La implementación resultante corrige tres errores reales de usabilidad detectados en uso normal (conexión, mouse y bandera), traslada la información relevante de la terminal a una interfaz visual sin perder la traza de depuración, y reemplaza una regla numérica fija por control manual del anfitrión, sin modificar el protocolo de comunicación acordado por la clase.

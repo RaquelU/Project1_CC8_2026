@@ -17,7 +17,6 @@ const SPEED := 200.0
 const TICK_RATE := 20.0
 
 const COUNTDOWN_SECONDS := 5
-const MIN_PLAYERS := 16
 const POST_GAME_SECONDS := 5.0
 const SPAWN_RADIUS_MIN := 350.0
 const SPAWN_RADIUS_MAX := 450.0
@@ -59,6 +58,8 @@ var flag_visual_original_parent: Node
 @onready var players_container: Node3D = $PlayersContainer
 @onready var flag_visual: Node3D = $GameplayArea/Flag
 @onready var status_label: Label = $UI/StatusLabel
+@onready var start_button: Button = $UI/StartGameButton
+@onready var info_panel: Control = get_node_or_null("UI/InfoPanel")
 
 
 func _ready() -> void:
@@ -76,10 +77,39 @@ func _ready() -> void:
 		push_error("No se pudo iniciar el descubrimiento UDP.")
 		return
 
-	print("Servidor TCP iniciado en el puerto ", TCP_PORT)
-	print("Descubrimiento UDP activo en el puerto ", UDP_PORT)
+	_log("Servidor TCP iniciado en el puerto %d" % TCP_PORT)
+	_log("Descubrimiento UDP activo en el puerto %d" % UDP_PORT)
+
+	start_button.pressed.connect(_on_start_button_pressed)
 
 	update_status_label()
+	update_players_panel()
+
+
+func _log(text: String) -> void:
+	print(text)
+
+	if info_panel:
+		info_panel.add_log(text)
+
+
+func update_players_panel() -> void:
+	if not info_panel:
+		return
+
+	var names: Array[String] = []
+
+	for player in players.values():
+		names.append(str(player["name"]))
+
+	info_panel.set_players(names)
+
+
+func get_display_name(player_id: String) -> String:
+	if players.has(player_id):
+		return str(players[player_id]["name"])
+
+	return "Jugador %s" % player_id
 
 
 func _process(delta: float) -> void:
@@ -124,7 +154,7 @@ func accept_new_clients() -> void:
 			"invalid_json_count": 0
 		}
 
-		print("Nueva conexión TCP: ", player_id)
+		_log("Nueva conexión TCP: %s" % player_id)
 
 
 func read_client_messages() -> void:
@@ -299,9 +329,7 @@ func handle_join(player_id: String, message: Dictionary) -> void:
 	})
 
 	broadcast_lobby()
-
-	if players.size() >= MIN_PLAYERS:
-		start_countdown()
+	update_players_panel()
 
 
 func is_valid_player_name(player_name: String) -> bool:
@@ -317,8 +345,19 @@ func is_valid_player_name(player_name: String) -> bool:
 	return true
 
 
+func _on_start_button_pressed() -> void:
+	if phase != "lobby":
+		return
+
+	if players.is_empty():
+		_log("No se puede iniciar: no hay jugadores conectados.")
+		return
+
+	start_countdown()
+
+
 func start_countdown() -> void:
-	if phase != "lobby" or players.size() < MIN_PLAYERS:
+	if phase != "lobby" or players.is_empty():
 		return
 
 	phase = "countdown"
@@ -329,7 +368,7 @@ func start_countdown() -> void:
 		if current_token != countdown_token:
 			return
 
-		if players.size() < MIN_PLAYERS:
+		if players.is_empty():
 			abort_countdown()
 			return
 
@@ -343,7 +382,7 @@ func start_countdown() -> void:
 	if current_token != countdown_token:
 		return
 
-	if players.size() < MIN_PLAYERS:
+	if players.is_empty():
 		abort_countdown()
 		return
 
@@ -354,7 +393,7 @@ func abort_countdown() -> void:
 	countdown_token += 1
 	phase = "lobby"
 	broadcast_lobby()
-	print("Countdown cancelado: faltan jugadores.")
+	_log("Countdown cancelado: no quedan jugadores conectados.")
 
 
 func begin_round() -> void:
@@ -374,7 +413,7 @@ func begin_round() -> void:
 
 	broadcast({"type": "start"})
 	broadcast_state()
-	print("La partida comenzó con ", players.size(), " jugadores.")
+	_log("La partida comenzó con %d jugadores." % players.size())
 
 
 func create_spawn_position() -> Vector2:
@@ -601,7 +640,7 @@ func finish_round(winner_id: String) -> void:
 		"winner": winner_id
 	})
 
-	print("Ganador: ", winner_id)
+	_log("Ganador: %s" % get_display_name(winner_id))
 	await get_tree().create_timer(POST_GAME_SECONDS).timeout
 
 	if phase == "finished":
@@ -620,10 +659,7 @@ func return_to_lobby() -> void:
 		players[player_id] = player
 
 	broadcast_lobby()
-	print("Servidor regresó al lobby.")
-
-	if players.size() >= MIN_PLAYERS:
-		start_countdown()
+	_log("Servidor regresó al lobby.")
 
 
 func broadcast_state() -> void:
@@ -696,7 +732,7 @@ func remove_client(player_id: String) -> void:
 	if was_owner:
 		reset_flag()
 
-	if phase == "countdown" and players.size() < MIN_PLAYERS:
+	if phase == "countdown" and players.is_empty():
 		abort_countdown()
 	elif phase == "lobby" and was_joined:
 		broadcast_lobby()
@@ -705,7 +741,8 @@ func remove_client(player_id: String) -> void:
 		pending_interactions.clear()
 		reset_flag()
 
-	print("Cliente desconectado: ", player_id)
+	_log("Cliente desconectado: %s" % player_id)
+	update_players_panel()
 
 
 func reset_flag() -> void:
@@ -795,8 +832,21 @@ func sync_player_visuals() -> void:
 
 	for player_id in player_visuals.keys():
 		if not seen_ids.has(player_id):
+			release_flag_visual_from_node(player_visuals[player_id])
 			player_visuals[player_id].queue_free()
 			player_visuals.erase(player_id)
+
+
+func release_flag_visual_from_node(node: Node) -> void:
+	# La bandera visual puede estar reparentada bajo el jugador que la lleva.
+	# Si a ese nodo se le hace queue_free() mientras aún es su padre, Godot
+	# destruye también a la bandera (los hijos se liberan junto al padre),
+	# por lo que dejaría de aparecer en las siguientes rondas.
+	if is_instance_valid(flag_visual) and flag_visual.get_parent() == node:
+		if flag_visual_original_parent:
+			flag_visual.reparent(flag_visual_original_parent)
+		else:
+			node.remove_child(flag_visual)
 
 
 func spawn_player_visual(player_id: String, player_name: String, position: Vector3) -> void:
@@ -854,6 +904,13 @@ func update_status_label() -> void:
 			players.size(),
 			MAX_PLAYERS
 		]
+	)
+
+	var can_start := phase == "lobby" and not players.is_empty()
+	start_button.disabled = not can_start
+	start_button.text = (
+		"Iniciar partida" if can_start
+		else "Iniciar partida (esperando jugadores)"
 	)
 
 

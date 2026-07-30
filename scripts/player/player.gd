@@ -12,7 +12,6 @@ var target_position := Vector3.ZERO
 
 func _ready() -> void:
 	add_to_group("local_player")
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 	target_position = global_position
 

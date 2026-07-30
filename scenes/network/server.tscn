@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cgrnxadwx3iwg"]
 
 [ext_resource type="Script" uid="uid://icipmwgk87mf" path="res://scripts/network/game_server.gd" id="1_k0wwj"]
+[ext_resource type="Script" path="res://scripts/ui/info_panel.gd" id="2_infopanel"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
 albedo_color = Color(0.37871593, 0.21920899, 0, 1)
@@ -90,3 +91,62 @@ offset_right = 520.0
 offset_bottom = 140.0
 theme_override_font_sizes/font_size = 22
 text = "Iniciando servidor..."
+
+[node name="StartGameButton" type="Button" parent="UI" unique_id=2394871056]
+offset_left = 16.0
+offset_top = 150.0
+offset_right = 260.0
+offset_bottom = 200.0
+theme_override_font_sizes/font_size = 20
+text = "Iniciar partida"
+
+[node name="InfoPanel" type="PanelContainer" parent="UI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -320.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 260.0
+grow_horizontal = 0
+script = ExtResource("2_infopanel")
+panel_title = "Registro del servidor"
+
+[node name="Margin" type="MarginContainer" parent="UI/InfoPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="UI/InfoPanel/Margin"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="UI/InfoPanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Registro del servidor"
+
+[node name="LogText" type="RichTextLabel" parent="UI/InfoPanel/Margin/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(290, 130)
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 13
+bbcode_enabled = false
+scroll_following = true
+
+[node name="HSeparator" type="HSeparator" parent="UI/InfoPanel/Margin/VBox"]
+layout_mode = 2
+
+[node name="PlayersLabel" type="Label" parent="UI/InfoPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Jugadores conectados:"
+
+[node name="PlayersText" type="RichTextLabel" parent="UI/InfoPanel/Margin/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(290, 70)
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 13
+bbcode_enabled = false

@@ -11,13 +11,18 @@ const FLAG_GROUND_HEIGHT := 0.1
 @export var server_port := 8889
 @export var player_name := "Jugador local"
 
+const CONNECT_TIMEOUT_SECONDS := 6.0
+
 @onready var server_discovery: Node = $"../ServerDiscovery"
 @onready var countdown_label: Label = $"../UI/CountdownLabel"
+@onready var info_panel: Control = get_node_or_null("../UI/InfoPanel")
 
 var peer := StreamPeerTCP.new()
 var buffer := ""
 
 var connected := false
+var connecting := false
+var connect_elapsed := 0.0
 var join_sent := false
 var game_started := false
 var local_player_id := ""
@@ -31,6 +36,7 @@ var remote_players: Dictionary = {}
 var known_player_names: Dictionary = {}
 
 signal connection_completed
+signal connection_failed(reason: String)
 
 
 func _ready() -> void:
@@ -47,28 +53,68 @@ func _ready() -> void:
 	try_manual_connection_from_arguments()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	peer.poll()
 
 	var status := peer.get_status()
 
 	if status == StreamPeerTCP.STATUS_CONNECTED:
+		connecting = false
+		connect_elapsed = 0.0
+
 		if not connected:
 			connected = true
-			print("Conectado al servidor.")
+			_log("Conectado al servidor.")
 
 		if not join_sent:
 			send_join()
 
 		read_messages()
 
-	elif connected:
-		connected = false
-		join_sent = false
-		game_started = false
-		clear_remote_players()
-		hide_countdown()
-		print("Servidor desconectado.")
+	elif status == StreamPeerTCP.STATUS_CONNECTING:
+		if connecting:
+			connect_elapsed += delta
+
+			if connect_elapsed >= CONNECT_TIMEOUT_SECONDS:
+				_log("Tiempo de espera agotado al conectar con el servidor.")
+				fail_connection("TIMEOUT")
+
+	elif status == StreamPeerTCP.STATUS_ERROR:
+		if connected:
+			connected = false
+			join_sent = false
+			game_started = false
+			clear_remote_players()
+			hide_countdown()
+			_log("Servidor desconectado.")
+		elif connecting:
+			_log("No se pudo conectar con el servidor.")
+			fail_connection("CONNECTION_ERROR")
+
+	else:
+		# STATUS_NONE: la conexión se cerró (por el servidor o localmente).
+		if connected:
+			connected = false
+			join_sent = false
+			game_started = false
+			clear_remote_players()
+			hide_countdown()
+			_log("Servidor desconectado.")
+		elif connecting:
+			_log("No se pudo conectar con el servidor.")
+			fail_connection("CONNECTION_ERROR")
+
+
+func fail_connection(reason: String) -> void:
+	connecting = false
+	connect_elapsed = 0.0
+	join_sent = false
+	game_started = false
+
+	if peer.get_status() != StreamPeerTCP.STATUS_NONE:
+		peer.disconnect_from_host()
+
+	connection_failed.emit(reason)
 
 
 func connect_to_server() -> void:
@@ -84,10 +130,16 @@ func connect_to_server() -> void:
 	var result := peer.connect_to_host(server_ip, server_port)
 
 	if result != OK:
+		connecting = false
 		push_error("No se pudo iniciar la conexión TCP.")
+		_log("No se pudo iniciar la conexión TCP.")
+		connection_failed.emit("CONNECT_FAILED")
 		return
 
-	print("Conectando con ", server_ip, ":", server_port)
+	connecting = true
+	connect_elapsed = 0.0
+
+	_log("Conectando con %s:%s" % [server_ip, server_port])
 
 func connect_with_address(ip: String, port: int) -> void:
 	server_ip = ip
@@ -100,6 +152,8 @@ func disconnect_from_server() -> void:
 
 	buffer = ""
 	connected = false
+	connecting = false
+	connect_elapsed = 0.0
 	join_sent = false
 	game_started = false
 	last_direction = Vector2(99.0, 99.0)
@@ -107,7 +161,17 @@ func disconnect_from_server() -> void:
 	clear_remote_players()
 	hide_countdown()
 
-	print("Desconectado por el jugador. Volviendo al menú.")
+	if info_panel:
+		info_panel.set_players([])
+
+	_log("Desconectado por el jugador. Volviendo al menú.")
+
+
+func _log(text: String) -> void:
+	print(text)
+
+	if info_panel:
+		info_panel.add_log(text)
 
 func send_join() -> void:
 	join_sent = true
@@ -194,9 +258,9 @@ func handle_message(message: Dictionary) -> void:
 	match message.get("type", ""):
 		"welcome":
 			local_player_id = str(message["player_id"])
-			print("ID asignado: ", local_player_id)
+			_log("ID asignado: %s" % local_player_id)
 			connection_completed.emit()
-			print("Configuración: ", message["config"])
+			_log("Configuración recibida del servidor: %s" % message["config"])
 
 		"lobby":
 			game_started = false
@@ -204,18 +268,18 @@ func handle_message(message: Dictionary) -> void:
 			clear_remote_players()
 			update_known_player_names(message.get("players", []))
 			hide_countdown()
-			print("Jugadores en lobby: ", message.get("players", []).size())
+			_log("Jugadores en lobby: %s" % message.get("players", []).size())
 
 		"countdown":
 			game_started = false
 			show_countdown(int(message["seconds"]))
-			print("La partida inicia en ", message["seconds"])
+			_log("La partida inicia en %s" % message["seconds"])
 
 		"start":
 			game_started = true
 			last_direction = Vector2(99.0, 99.0)
 			hide_countdown()
-			print("Partida iniciada.")
+			_log("Partida iniciada.")
 
 		"state":
 			apply_state(message)
@@ -223,10 +287,17 @@ func handle_message(message: Dictionary) -> void:
 		"game_over":
 			game_started = false
 			hide_countdown()
-			print("Ganador: ", message["winner"])
+			_log("Ganador: %s" % get_display_name(str(message["winner"])))
 
 		"error":
-			print("Error del servidor: ", message["reason"])
+			_log("Error del servidor: %s" % message["reason"])
+
+
+func get_display_name(player_id: String) -> String:
+	if player_id == local_player_id:
+		return player_name
+
+	return str(known_player_names.get(player_id, "Jugador %s" % player_id))
 
 
 func show_countdown(seconds: int) -> void:
@@ -274,8 +345,21 @@ func update_remote_player(player_id: String, position: Vector3) -> void:
 func update_known_player_names(player_list: Array) -> void:
 	known_player_names.clear()
 
+	var display_names: Array[String] = []
+
 	for player_data in player_list:
-		known_player_names[str(player_data["id"])] = str(player_data["name"])
+		var player_id := str(player_data["id"])
+		var name_text := str(player_data["name"])
+
+		known_player_names[player_id] = name_text
+
+		if player_id == local_player_id:
+			display_names.append("%s (tú)" % name_text)
+		else:
+			display_names.append(name_text)
+
+	if info_panel:
+		info_panel.set_players(display_names)
 
 
 func spawn_remote_player(player_id: String, position: Vector3) -> void:
@@ -296,15 +380,29 @@ func spawn_remote_player(player_id: String, position: Vector3) -> void:
 func remove_stale_remote_players(seen_ids: Dictionary) -> void:
 	for player_id in remote_players.keys():
 		if not seen_ids.has(player_id):
+			release_flag_from_node(remote_players[player_id])
 			remote_players[player_id].queue_free()
 			remote_players.erase(player_id)
 
 
 func clear_remote_players() -> void:
 	for player_id in remote_players.keys():
+		release_flag_from_node(remote_players[player_id])
 		remote_players[player_id].queue_free()
 
 	remote_players.clear()
+
+
+func release_flag_from_node(node: Node) -> void:
+	# Si la bandera está actualmente sujeta al jugador que se va a eliminar,
+	# hay que sacarla antes del queue_free(), o el motor la destruiría junto
+	# con su portador (queue_free borra también a los hijos), y ya no
+	# volvería a aparecer en las siguientes partidas.
+	if is_instance_valid(flag) and flag.get_parent() == node:
+		if flag_original_parent:
+			flag.reparent(flag_original_parent)
+		else:
+			node.remove_child(flag)
 
 
 func protocol_to_godot(x: float, y: float) -> Vector3:
@@ -316,7 +414,7 @@ func protocol_to_godot(x: float, y: float) -> Vector3:
 
 
 func update_flag(flag_data: Dictionary) -> void:
-	if not flag or flag_data.is_empty():
+	if not is_instance_valid(flag) or flag_data.is_empty():
 		return
 
 	var flag_owner: Variant = flag_data.get("owner")
